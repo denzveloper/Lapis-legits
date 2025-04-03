@@ -7,6 +7,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import VideoHero from '@/components/video/VideoHero';
 import VideoSection from '@/components/video/VideoSection';
+import ScrollVideoController from '@/components/video/ScrollVideoController';
 import Link from 'next/link';
 import { VideoSource } from '@/utils/videoPreloader';
 
@@ -28,14 +29,51 @@ const SectionTitle = styled.h2`
   text-align: center;
 `;
 
+const ContentSection = styled.section`
+  padding: var(--spacing-xl) 0;
+  position: relative;
+  background-color: var(--color-background-dark);
+  color: var(--color-text-light);
+  margin-top: 100vh; /* Add space for the video scroll sections */
+`;
+
 // Sample video sources for development
 const heroVideoSources: VideoSource[] = [
   { src: '/videos/hero-video.mp4', type: 'video/mp4' },
   { src: '/videos/hero-video.webm', type: 'video/webm' }
 ];
 
+// Define video transitions for the landing page
+const videoTransitions = [
+  {
+    id: 'hero-section',
+    startPosition: 0,
+    endPosition: 0.33,
+    videoSrc: '/videos/hero-video.mp4',
+    title: 'Captivating Visual Stories That Inspire',
+    subtitle: 'LAPIS creates immersive visual experiences that blend artistry with powerful storytelling'
+  },
+  {
+    id: 'commercial-section',
+    startPosition: 0.33,
+    endPosition: 0.66,
+    videoSrc: '/videos/commercial.mp4',
+    title: 'Commercial Productions',
+    subtitle: 'High-impact video content that drives engagement and elevates your brand'
+  },
+  {
+    id: 'documentary-section',
+    startPosition: 0.66,
+    endPosition: 1,
+    videoSrc: '/videos/documentary.mp4',
+    title: 'Documentary Storytelling',
+    subtitle: 'Authentic narratives that connect with audiences on a deeper level'
+  }
+];
+
 export default function Home() {
   const mainRef = useRef<HTMLDivElement>(null);
+  const contentSectionRef = useRef<HTMLElement>(null);
   const [scrollY, setScrollY] = useState(0);
   
   useEffect(() => {
@@ -56,11 +94,8 @@ export default function Home() {
   }, []);
   
   const handleHeroScroll = () => {
-    if (mainRef.current) {
-      const firstSection = mainRef.current.querySelector('section:nth-of-type(2)');
-      if (firstSection) {
-        firstSection.scrollIntoView({ behavior: 'smooth' });
-      }
+    if (contentSectionRef.current) {
+      contentSectionRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -69,7 +104,7 @@ export default function Home() {
       <Header />
       <Main ref={mainRef}>
         {/* Development links - remove before production */}
-        <div style={{ padding: '1rem', backgroundColor: '#f8f9fa', textAlign: 'center' }}>
+        <div style={{ padding: '1rem', backgroundColor: '#f8f9fa', textAlign: 'center', position: 'relative', zIndex: 10 }}>
           <Link 
             href="/scroll-test" 
             style={{ color: '#007bff', textDecoration: 'underline', marginRight: '1rem' }}
@@ -90,15 +125,14 @@ export default function Home() {
           </Link>
         </div>
         
-        <VideoHero 
-          title="Captivating Visual Stories That Inspire"
-          subtitle="LAPIS creates immersive visual experiences that blend artistry with powerful storytelling"
-          videoSources={heroVideoSources}
-          posterUrl="/images/hero-poster.jpg"
-          onScrollClick={handleHeroScroll}
+        {/* Scroll Video Controller for the hero and video sections */}
+        <ScrollVideoController 
+          transitions={videoTransitions}
+          preloadAll={false}
         />
         
-        <Section className="container">
+        {/* Content sections start after the video scroll sections */}
+        <ContentSection ref={contentSectionRef} className="container">
           <SectionTitle>Our Work</SectionTitle>
           <VideoSection 
             title="Commercial Productions" 
@@ -118,9 +152,7 @@ export default function Home() {
             videoSrc="/videos/event.mp4" 
             description="Dynamic event documentation that preserves the energy and highlights of your special moments."
           />
-        </Section>
         
-        <Section className="container">
           <SectionTitle>Our Services</SectionTitle>
           <motion.div
             initial={{ opacity: 0 }}
@@ -133,9 +165,7 @@ export default function Home() {
               LAPIS offers a comprehensive range of video production services tailored to your specific needs.
             </p>
           </motion.div>
-        </Section>
         
-        <Section className="container">
           <SectionTitle>Contact Us</SectionTitle>
           <motion.div
             initial={{ opacity: 0 }}
@@ -148,7 +178,7 @@ export default function Home() {
               Ready to start your project? Get in touch with our team.
             </p>
           </motion.div>
-        </Section>
+        </ContentSection>
       </Main>
       <Footer />
     </>
