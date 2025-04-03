@@ -1,0 +1,11 @@
+# Task ID: 5
+# Title: Implement Services Section with Video Examples
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Develop the services presentation section with descriptions and associated video snippets for each service category.
+# Details:
+Design and implement services section layout with clear categorization. Create service card components with descriptive text and associated video snippets. Implement hover/click interaction to highlight services with subtle animations. Ensure videos in this section autoplay (muted) when in viewport and pause when not visible. Add placeholder content for all LAPIS service categories. Make section fully responsive with appropriate layout changes for mobile. Create smooth transitions between service categories if selected.
+
+# Test Strategy:
+Verify video autoplay behavior works correctly on scroll. Test service section responsiveness on various devices. Measure performance impact of multiple video elements. Test with screen readers for accessibility.

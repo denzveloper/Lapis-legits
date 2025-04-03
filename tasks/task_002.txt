@@ -1,0 +1,109 @@
+# Task ID: 2
+# Title: Implement Basic Video Player and Scroll Detection
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Create the foundation for the video playback system with scroll-triggered functionality that will power the dynamic video experience.
+# Details:
+Develop a custom React hook (useScrollVideo) that utilizes Intersection Observer API to detect scroll position. Create a VideoPlayer component that accepts video sources and controls playback based on scroll position. Implement basic video preloading strategy to improve performance. Set up canvas-based rendering for future transition effects. Create placeholder videos for development. Ensure video playback is muted by default with user controls to enable audio. Implement basic error handling for video loading failures.
+
+# Test Strategy:
+Test scroll detection accuracy across browsers. Measure memory usage during video playback. Verify video loading and unloading behavior as elements enter/exit viewport.
+
+# Subtasks:
+## 1. Create useScrollVideo hook with Intersection Observer [done]
+### Dependencies: None
+### Description: Develop a custom React hook that uses the Intersection Observer API to detect scroll position and provide scroll-related data to video components.
+### Details:
+Implementation steps:
+1. Create a new file `useScrollVideo.js` in the hooks directory
+2. Implement the hook to instantiate an Intersection Observer that tracks when a target element enters/exits the viewport
+3. Configure the hook to calculate scroll progress (0-100%) based on element visibility
+4. Return relevant data: isInView, scrollProgress, elementRef
+5. Add threshold options to allow fine-tuning of detection sensitivity
+6. Include cleanup function to disconnect observer when component unmounts
+
+Testing approach:
+- Create a simple test component that uses the hook and displays scroll percentage
+- Verify observer properly initializes and disconnects
+- Test with different threshold configurations
+- Ensure accurate scroll progress calculation
+
+## 2. Implement basic VideoPlayer component [done]
+### Dependencies: 2.1
+### Description: Create a React component that handles video playback with scroll-based controls using the useScrollVideo hook.
+### Details:
+Implementation steps:
+1. Create VideoPlayer.jsx component with props for video source, autoplay, loop, and muted options
+2. Integrate the useScrollVideo hook to get scroll position data
+3. Implement video ref to control HTML5 video element programmatically
+4. Add logic to play/pause video based on visibility in viewport
+5. Implement muted-by-default behavior with toggle controls
+6. Create basic video controls (play/pause, mute/unmute)
+7. Handle basic video events (onLoadStart, onCanPlay, onError)
+
+Testing approach:
+- Test video playback starts/stops correctly based on scroll position
+- Verify mute/unmute functionality works
+- Ensure proper cleanup of video resources on unmount
+- Test with different video formats (mp4, webm)
+
+## 3. Implement video preloading strategy [pending]
+### Dependencies: 2.2
+### Description: Create a preloading mechanism to improve video playback performance by loading videos before they're needed.
+### Details:
+Implementation steps:
+1. Create a VideoPreloader utility class/function
+2. Implement methods to preload videos using the 'preload' attribute or by creating hidden video elements
+3. Add priority levels for videos (high, medium, low)
+4. Implement queue management for preloading multiple videos
+5. Create a context provider to make preloaded videos available throughout the app
+6. Enhance VideoPlayer to use preloaded videos when available
+7. Add memory management to unload videos that are no longer needed
+
+Testing approach:
+- Measure load time improvements with preloading enabled vs. disabled
+- Test with multiple video sources to ensure queue works correctly
+- Verify memory is properly managed by checking for leaks
+- Test priority system works as expected
+
+## 4. Set up canvas-based rendering system [pending]
+### Dependencies: 2.2
+### Description: Implement a canvas rendering system that will be used for applying transition effects to videos as users scroll.
+### Details:
+Implementation steps:
+1. Create a CanvasVideoRenderer component that wraps the VideoPlayer
+2. Set up a canvas element sized to match the video dimensions
+3. Implement requestAnimationFrame loop to draw video frames to canvas
+4. Create a basic effects pipeline that can be extended later
+5. Add initial simple effect (e.g., opacity change based on scroll)
+6. Ensure canvas properly cleans up resources when unmounted
+7. Optimize rendering performance with appropriate checks
+
+Testing approach:
+- Compare performance between direct video playback and canvas rendering
+- Test canvas resizing on window resize events
+- Verify basic effects apply correctly based on scroll position
+- Check for memory leaks during continuous scrolling
+
+## 5. Implement error handling and placeholder videos [pending]
+### Dependencies: 2.2, 2.3
+### Description: Create comprehensive error handling for video loading failures and implement placeholder videos for development and fallback purposes.
+### Details:
+Implementation steps:
+1. Create error states in VideoPlayer component
+2. Implement error boundary around video components
+3. Design fallback UI for when videos fail to load
+4. Create or source 3-5 placeholder videos of different lengths for development
+5. Add retry mechanism for failed video loads
+6. Implement logging for video loading errors
+7. Create a VideoPlaceholder component that shows while video is loading
+8. Add timeout handling for videos that take too long to load
+
+Testing approach:
+- Test with intentionally broken video URLs
+- Verify error messages are user-friendly and informative
+- Test retry functionality works correctly
+- Ensure placeholder videos display properly during development
+- Simulate slow network conditions to test loading states
+

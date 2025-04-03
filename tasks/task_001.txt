@@ -1,0 +1,11 @@
+# Task ID: 1
+# Title: Setup Project Repository and Core Structure
+# Status: in-progress
+# Dependencies: None
+# Priority: high
+# Description: Initialize the Next.js/React project with basic configuration, folder structure, and essential dependencies for the LAPIS website.
+# Details:
+Create a new Next.js project using 'create-next-app' with TypeScript configuration. Set up folder structure following best practices (components, pages, styles, utils, hooks, etc.). Install essential dependencies: styled-components, framer-motion, intersection-observer polyfill, and video.js. Configure ESLint and Prettier for code quality. Set up basic responsive layout components with CSS variables for theming. Implement global styling with focus on performance and minimalist design.
+
+# Test Strategy:
+Verify project builds without errors. Confirm responsive layout works on multiple screen sizes. Run Lighthouse test to establish baseline performance metrics.
