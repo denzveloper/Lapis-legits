@@ -78,9 +78,15 @@ export default function Home() {
           </Link>
           <Link 
             href="/video-player-test" 
-            style={{ color: '#007bff', textDecoration: 'underline' }}
+            style={{ color: '#007bff', textDecoration: 'underline', marginRight: '1rem' }}
           >
             View Video Player Test Page
+          </Link>
+          <Link 
+            href="/scroll-video-sections" 
+            style={{ color: '#007bff', textDecoration: 'underline' }}
+          >
+            View Scroll Video Sections Test Page
           </Link>
         </div>
         
