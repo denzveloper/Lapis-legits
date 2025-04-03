@@ -1,0 +1,188 @@
+<context>
+# Overview  
+LAPIS is a video production agency that requires a modern, visually striking website to showcase their work and services. The website will feature dynamic, high-resolution video elements that blend and transition as users scroll through the landing page, creating an immersive and engaging experience that reflects the agency's creative capabilities and high production values.
+
+# Core Features  
+1. Dynamic Video Scrolling Experience
+   - What it does: Seamlessly blends and transitions between high-resolution video elements as users scroll through the landing page
+   - Why it's important: Creates an immersive, cinematic experience that showcases LAPIS's video production expertise
+   - How it works: Uses scroll-triggered animations and video transitions with optimized loading for performance
+
+2. Portfolio Showcase
+   - What it does: Displays LAPIS's video projects in an interactive gallery
+   - Why it's important: Demonstrates the agency's capabilities and style to potential clients
+   - How it works: Features video thumbnails that expand to full-screen playback with project details
+
+3. Service Offerings
+   - What it does: Presents LAPIS's video production services with visual examples
+   - Why it's important: Clearly communicates the agency's capabilities to potential clients
+   - How it works: Each service category includes descriptive text alongside relevant video snippets
+
+4. Contact and Inquiry System
+   - What it does: Allows potential clients to reach out and request information or quotes
+   - Why it's important: Facilitates lead generation and client acquisition
+   - How it works: Includes a streamlined form with project requirement options and direct contact information
+
+# User Experience  
+User Personas:
+1. Corporate Marketing Directors - Looking for professional video production for campaigns
+2. Independent Filmmakers - Seeking post-production or technical services
+3. Event Organizers - Needing event coverage and promotional materials
+
+Key User Flows:
+1. Landing Page Experience
+   - User arrives at website
+   - Engages with dynamic video scrolling experience
+   - Navigates to portfolio or services sections
+
+2. Portfolio Exploration
+   - User browses video thumbnails by category
+   - Selects videos to view in full screen
+   - Reviews project details and related work
+
+3. Service Discovery and Inquiry
+   - User explores service offerings
+   - Views example videos for relevant services
+   - Completes inquiry form for specific services
+
+UI/UX Considerations:
+- Minimalist, modern interface that puts visual content first
+- Intuitive navigation that doesn't distract from video elements
+- Responsive design that maintains video quality across devices
+- Optimized loading to ensure smooth scrolling and transitions
+</context>
+<PRD>
+# Technical Architecture  
+System Components:
+1. Frontend Framework
+   - React.js for component-based UI development
+   - Next.js for server-side rendering and optimized performance
+
+2. Video Integration System
+   - Intersection Observer API for scroll detection
+   - Canvas-based video transitions for seamless blending effects
+   - Video compression and optimization pipeline
+
+3. Content Management System
+   - Headless CMS for managing portfolio and service content
+   - Custom admin interface for video uploads and metadata
+
+4. Contact System
+   - Form submission handler with validation
+   - Email notification service for inquiries
+
+Data Models:
+1. Video Assets
+   - High-resolution video files with multiple quality versions
+   - Metadata including project details, categories, and clients
+   - Transition points and animation parameters
+
+2. Services
+   - Service categories and descriptions
+   - Associated video examples and case studies
+   - Pricing tiers and offering details
+
+3. Client Inquiries
+   - Contact information
+   - Project requirements and service interests
+   - Budget range and timeline information
+
+APIs and Integrations:
+1. Video Hosting/CDN Integration
+   - Integration with video CDN for optimized delivery
+   - Lazy loading and progressive enhancement
+
+2. Analytics Integration
+   - User interaction tracking for video engagement
+   - Conversion tracking for inquiries
+
+Infrastructure Requirements:
+1. High-performance hosting with CDN support
+2. Video optimization and processing pipeline
+3. Secure form handling and data storage
+4. Backup and redundancy systems for media assets
+
+# Development Roadmap  
+Phase 1: MVP Foundation
+- Responsive landing page with basic scroll-triggered video sections
+- Simple portfolio page with video thumbnails and playback
+- Core services section with descriptions
+- Basic contact form
+- Essential branding and design elements
+
+Phase 2: Enhanced Video Experience
+- Advanced video blending and transition effects
+- Optimized video loading and playback performance
+- Expanded portfolio with filtering capabilities
+- Improved mobile experience for video content
+
+Phase 3: Content and Interaction Refinement
+- Integration with headless CMS for content management
+- Enhanced service presentation with interactive elements
+- Advanced inquiry system with project scoping options
+- Animation refinements and performance optimizations
+
+Phase 4: Advanced Features
+- Client testimonial video integration
+- Behind-the-scenes content section
+- Interactive case studies with process breakdowns
+- Social media integration and sharing capabilities
+
+# Logical Dependency Chain
+Foundation Elements (Build First):
+1. Core website structure and responsive framework
+2. Basic video player and scroll detection system
+3. Simple portfolio display mechanism
+4. Essential navigation and UI components
+
+Quick Wins for Visible Progress:
+1. Landing page with initial video transitions
+2. Portfolio page with basic functionality
+3. Simple contact form implementation
+
+Feature Development Sequence:
+1. Basic video scrolling → Enhanced transitions → Advanced blending effects
+2. Simple portfolio → Categorized gallery → Interactive showcase
+3. Service descriptions → Service examples → Interactive service exploration
+4. Basic contact → Enhanced inquiry → Automated follow-up system
+
+# Risks and Mitigations  
+Technical Challenges:
+1. Video Performance
+   - Risk: Large video files causing slow loading and poor performance
+   - Mitigation: Implement adaptive streaming, compression, and preloading techniques
+
+2. Cross-Browser Compatibility
+   - Risk: Advanced video effects not working consistently across browsers
+   - Mitigation: Use progressive enhancement and fallback options for older browsers
+
+3. Mobile Experience
+   - Risk: Video-heavy experience consuming excessive bandwidth on mobile
+   - Mitigation: Develop mobile-specific optimizations and alternative experiences
+
+MVP Considerations:
+1. Balancing Visual Impact vs. Performance
+   - Risk: Overemphasis on visual effects at the expense of usability
+   - Mitigation: Establish core performance metrics and test regularly
+
+2. Content Management Complexity
+   - Risk: Difficult for client to update video content independently
+   - Mitigation: Develop intuitive CMS with clear documentation
+
+Resource Constraints:
+1. Video Production Requirements
+   - Risk: Need for extensive custom video content for the website itself
+   - Mitigation: Design system to work with existing portfolio content initially
+
+# Appendix  
+Research Findings:
+- Analysis of competitor video production agency websites
+- Performance benchmarks for video-heavy websites
+- User expectations for creative agency websites
+
+Technical Specifications:
+- Video format and compression requirements
+- Animation and transition effect specifications
+- Responsive breakpoints and device optimizations
+- Accessibility considerations for video-centric design
+</PRD>
