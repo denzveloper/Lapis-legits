@@ -1,21 +1,25 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import VideoHero from '@/components/video/VideoHero';
 import VideoSection from '@/components/video/VideoSection';
 import Link from 'next/link';
+import { VideoSource } from '@/utils/videoPreloader';
 
 const Main = styled.main`
   width: 100%;
   min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-text);
 `;
 
 const Section = styled.section`
   padding: var(--spacing-xl) 0;
+  position: relative;
 `;
 
 const SectionTitle = styled.h2`
@@ -24,18 +28,46 @@ const SectionTitle = styled.h2`
   text-align: center;
 `;
 
+// Sample video sources for development
+const heroVideoSources: VideoSource[] = [
+  { src: '/videos/hero-video.mp4', type: 'video/mp4' },
+  { src: '/videos/hero-video.webm', type: 'video/webm' }
+];
+
 export default function Home() {
+  const mainRef = useRef<HTMLDivElement>(null);
+  const [scrollY, setScrollY] = useState(0);
+  
   useEffect(() => {
     // Ensure IntersectionObserver polyfill is loaded
     if (!('IntersectionObserver' in window)) {
       import('intersection-observer');
     }
+    
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
+  
+  const handleHeroScroll = () => {
+    if (mainRef.current) {
+      const firstSection = mainRef.current.querySelector('section:nth-of-type(2)');
+      if (firstSection) {
+        firstSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
 
   return (
     <>
       <Header />
-      <Main>
+      <Main ref={mainRef}>
         {/* Development links - remove before production */}
         <div style={{ padding: '1rem', backgroundColor: '#f8f9fa', textAlign: 'center' }}>
           <Link 
@@ -52,7 +84,13 @@ export default function Home() {
           </Link>
         </div>
         
-        <VideoHero />
+        <VideoHero 
+          title="Captivating Visual Stories That Inspire"
+          subtitle="LAPIS creates immersive visual experiences that blend artistry with powerful storytelling"
+          videoSources={heroVideoSources}
+          posterUrl="/images/hero-poster.jpg"
+          onScrollClick={handleHeroScroll}
+        />
         
         <Section className="container">
           <SectionTitle>Our Work</SectionTitle>

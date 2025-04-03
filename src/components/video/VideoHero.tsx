@@ -2,31 +2,55 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import ScrollVideoPlayer from './ScrollVideoPlayer';
+import { VideoSource } from '../../utils/videoPreloader';
+
+interface VideoHeroProps {
+  /**
+   * Title text displayed in the hero section
+   */
+  title?: string;
+  
+  /**
+   * Subtitle text displayed below the title
+   */
+  subtitle?: string;
+  
+  /**
+   * Optional callback when scroll indicator is clicked
+   */
+  onScrollClick?: () => void;
+  
+  /**
+   * Optional array of video sources for different formats
+   */
+  videoSources?: VideoSource[];
+  
+  /**
+   * Optional URL for poster/thumbnail image
+   */
+  posterUrl?: string;
+}
 
 const HeroContainer = styled.section`
   position: relative;
   height: 100vh;
   width: 100%;
   overflow: hidden;
+  background-color: var(--color-background-dark);
 `;
 
-const VideoWrapper = styled.div`
+const VideoWrapper = styled(motion.div)`
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: -1;
+  z-index: 0;
 `;
 
-const VideoElement = styled.video`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
-const Overlay = styled.div`
+const Overlay = styled(motion.div)`
   position: absolute;
   top: 0;
   left: 0;
@@ -44,27 +68,33 @@ const Overlay = styled.div`
   align-items: center;
   padding: 0 var(--spacing-lg);
   text-align: center;
+  z-index: 1;
 `;
 
 const Title = styled(motion.h1)`
-  font-size: var(--font-size-xxlarge);
+  font-size: clamp(2.5rem, 8vw, 5rem);
   font-weight: 700;
   margin-bottom: var(--spacing-md);
   max-width: 800px;
+  color: var(--color-text-light);
+  line-height: 1.2;
   
   @media (max-width: 768px) {
-    font-size: var(--font-size-xlarge);
+    max-width: 100%;
+    padding: 0 var(--spacing-md);
   }
 `;
 
 const Subtitle = styled(motion.p)`
-  font-size: var(--font-size-medium);
+  font-size: clamp(1rem, 3vw, 1.5rem);
   max-width: 600px;
   margin-bottom: var(--spacing-lg);
   color: var(--color-text-secondary);
+  line-height: 1.6;
   
   @media (max-width: 768px) {
-    font-size: var(--font-size-base);
+    max-width: 100%;
+    padding: 0 var(--spacing-md);
   }
 `;
 
@@ -77,6 +107,12 @@ const ScrollIndicator = styled(motion.div)`
   flex-direction: column;
   align-items: center;
   cursor: pointer;
+  z-index: 2;
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: translateX(-50%) translateY(5px);
+  }
 `;
 
 const ScrollText = styled.span`
@@ -84,12 +120,13 @@ const ScrollText = styled.span`
   margin-bottom: var(--spacing-xs);
   text-transform: uppercase;
   letter-spacing: 2px;
+  color: var(--color-text-light);
 `;
 
 const ScrollIcon = styled.div`
   width: 30px;
   height: 50px;
-  border: 2px solid var(--color-text);
+  border: 2px solid var(--color-text-light);
   border-radius: 15px;
   position: relative;
   
@@ -100,7 +137,7 @@ const ScrollIcon = styled.div`
     left: 50%;
     width: 6px;
     height: 6px;
-    background-color: var(--color-text);
+    background-color: var(--color-text-light);
     border-radius: 50%;
     transform: translateX(-50%);
     animation: scrollAnimation 2s infinite;
@@ -118,62 +155,62 @@ const ScrollIcon = styled.div`
   }
 `;
 
-export default function VideoHero() {
-  const videoRef = useRef<HTMLVideoElement>(null);
+export default function VideoHero({
+  title = "Captivating Visual Stories That Resonate",
+  subtitle = "LAPIS creates immersive video experiences that blend artistry with powerful storytelling",
+  onScrollClick,
+  videoSources = [
+    { src: '/videos/hero-video.mp4', type: 'video/mp4' },
+    { src: '/videos/hero-video.webm', type: 'video/webm' }
+  ],
+  posterUrl = '/images/hero-poster.jpg'
+}: VideoHeroProps) {
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   
-  useEffect(() => {
-    const videoElement = videoRef.current;
-    
-    if (videoElement) {
-      videoElement.addEventListener('loadeddata', () => {
-        setIsVideoLoaded(true);
+  // For parallax effect on scroll
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end start"]
+  });
+  
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const translateY = useTransform(scrollYProgress, [0, 1], [0, 150]);
+  
+  const handleScrollClick = () => {
+    if (onScrollClick) {
+      onScrollClick();
+    } else {
+      window.scrollTo({
+        top: window.innerHeight,
+        behavior: 'smooth'
       });
-      
-      // Placeholder for video - in a real implementation, you would use an actual video
-      // This is just a placeholder for now
-      setIsVideoLoaded(true);
     }
-    
-    return () => {
-      if (videoElement) {
-        videoElement.removeEventListener('loadeddata', () => {
-          setIsVideoLoaded(true);
-        });
-      }
-    };
-  }, []);
-  
-  const scrollToContent = () => {
-    window.scrollTo({
-      top: window.innerHeight,
-      behavior: 'smooth'
-    });
   };
   
   return (
-    <HeroContainer>
-      <VideoWrapper>
-        <VideoElement
-          ref={videoRef}
-          autoPlay
-          muted
-          loop
-          playsInline
-          poster="/images/hero-poster.jpg"
-        >
-          {/* In a real implementation, you would include actual video sources */}
-          {/* <source src="/videos/hero.mp4" type="video/mp4" /> */}
-        </VideoElement>
+    <HeroContainer ref={containerRef}>
+      <VideoWrapper style={{ translateY: translateY }}>
+        <ScrollVideoPlayer
+          sources={videoSources}
+          poster={posterUrl}
+          loop={true}
+          initiallyMuted={true}
+          aspectRatio="16 / 9"
+          playOnScroll={false}
+          usePreloading={true}
+          style={{ height: '100vh', width: '100vw', objectFit: 'cover' }}
+          onLoadedData={() => setIsVideoLoaded(true)}
+        />
       </VideoWrapper>
       
-      <Overlay>
+      <Overlay style={{ opacity }}>
         <Title
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: isVideoLoaded ? 1 : 0, y: isVideoLoaded ? 0 : 20 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          Captivating Visual Stories That Resonate
+          {title}
         </Title>
         
         <Subtitle
@@ -181,12 +218,12 @@ export default function VideoHero() {
           animate={{ opacity: isVideoLoaded ? 1 : 0, y: isVideoLoaded ? 0 : 20 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         >
-          LAPIS creates immersive video experiences that blend artistry with powerful storytelling
+          {subtitle}
         </Subtitle>
       </Overlay>
       
       <ScrollIndicator
-        onClick={scrollToContent}
+        onClick={handleScrollClick}
         initial={{ opacity: 0 }}
         animate={{ opacity: isVideoLoaded ? 1 : 0 }}
         transition={{ duration: 0.8, delay: 0.8 }}

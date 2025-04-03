@@ -4,7 +4,9 @@
   --color-secondary: #ffffff;
   --color-accent: #ff3366;
   --color-background: #0a0a0a;
+  --color-background-dark: #000000;
   --color-text: #f5f5f5;
+  --color-text-light: #ffffff;
   --color-text-secondary: #a0a0a0;
   
   /* Typography */

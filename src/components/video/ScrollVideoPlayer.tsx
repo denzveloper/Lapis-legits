@@ -81,6 +81,11 @@ interface ScrollVideoPlayerProps {
    * @default 1
    */
   preloadPriority?: number;
+
+  /**
+   * Callback fired when video has loaded data and is ready to play
+   */
+  onLoadedData?: () => void;
 }
 
 // Styled Components
@@ -220,7 +225,8 @@ const ScrollVideoPlayer: React.FC<ScrollVideoPlayerProps> = ({
   errorMessage = 'Error loading video',
   usePreloading = true,
   preloadMetadataOnly = false,
-  preloadPriority = 1
+  preloadPriority = 1,
+  onLoadedData
 }) => {
   // Refs and state
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -246,8 +252,13 @@ const ScrollVideoPlayer: React.FC<ScrollVideoPlayerProps> = ({
     if (preload?.videoElement) {
       videoRef.current = preload.videoElement;
       setIsLoaded(true);
+      
+      // Call onLoadedData callback if provided
+      if (onLoadedData) {
+        onLoadedData();
+      }
     }
-  }, [preload?.videoElement]);
+  }, [preload?.videoElement, onLoadedData]);
   
   // Toggle mute state
   const toggleMute = () => {
