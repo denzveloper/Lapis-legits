@@ -3,12 +3,14 @@
 import React, { useRef, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import videoPreloader from '@/utils/videoPreloader';
 
 interface VideoSectionProps {
   title: string;
   videoSrc: string;
   description: string;
   reverse?: boolean;
+  posterSrc?: string; // Poster image for video
 }
 
 const SectionContainer = styled.div<{ $reverse?: boolean }>`
@@ -20,6 +22,7 @@ const SectionContainer = styled.div<{ $reverse?: boolean }>`
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
     gap: var(--spacing-md);
+    margin: var(--spacing-lg) 0;
   }
   
   ${props => props.$reverse && `
@@ -37,6 +40,12 @@ const ContentContainer = styled.div`
   justify-content: center;
   direction: ltr;
   padding: var(--spacing-lg);
+  
+  @media (max-width: 768px) {
+    padding: var(--spacing-md) 0;
+    text-align: center;
+    order: 2;
+  }
 `;
 
 const VideoContainer = styled.div`
@@ -44,6 +53,15 @@ const VideoContainer = styled.div`
   overflow: hidden;
   border-radius: 8px;
   aspect-ratio: 16 / 9;
+  
+  @media (max-width: 768px) {
+    order: 1;
+    border-radius: 6px;
+  }
+  
+  @media (max-width: 480px) {
+    border-radius: 4px;
+  }
   
   &::before {
     content: '';
@@ -69,9 +87,37 @@ const VideoElement = styled.video`
   object-fit: cover;
 `;
 
+const PosterImage = styled.img`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  transition: opacity 0.3s ease;
+`;
+
+const LoadingPlaceholder = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-background-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 0;
+`;
+
 const Title = styled.h3`
   font-size: var(--font-size-large);
   margin-bottom: var(--spacing-md);
+  
+  @media (max-width: 768px) {
+    margin-bottom: var(--spacing-sm);
+  }
 `;
 
 const Description = styled.p`
@@ -79,6 +125,14 @@ const Description = styled.p`
   color: var(--color-text-secondary);
   line-height: 1.6;
   margin-bottom: var(--spacing-lg);
+  
+  @media (max-width: 768px) {
+    margin-bottom: var(--spacing-md);
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+  }
 `;
 
 const Button = styled.a`
@@ -91,16 +145,44 @@ const Button = styled.a`
   transition: all var(--transition-fast);
   align-self: flex-start;
   
+  @media (max-width: 768px) {
+    align-self: center;
+  }
+  
   &:hover {
     background-color: var(--color-accent);
     color: var(--color-secondary);
   }
 `;
 
-export default function VideoSection({ title, videoSrc, description, reverse = false }: VideoSectionProps) {
+export default function VideoSection({ 
+  title, 
+  videoSrc, 
+  description, 
+  reverse = false, 
+  posterSrc 
+}: VideoSectionProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isInView, setIsInView] = useState(false);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isVideoMounted, setIsVideoMounted] = useState(false);
+  
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    // Check initially and on resize
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
   
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -110,6 +192,7 @@ export default function VideoSection({ title, videoSrc, description, reverse = f
   const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0.4, 1, 1, 0.4]);
   const scale = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0.95, 1, 1, 0.95]);
   
+  // Use IntersectionObserver for lazy loading and play/pause
   useEffect(() => {
     if (!window.IntersectionObserver) return;
     
@@ -117,15 +200,48 @@ export default function VideoSection({ title, videoSrc, description, reverse = f
       ([entry]) => {
         setIsInView(entry.isIntersecting);
         
-        if (entry.isIntersecting && videoRef.current) {
-          videoRef.current.play().catch(error => {
-            console.error("Error playing video:", error);
-          });
+        if (entry.isIntersecting) {
+          // Only mount video element when it comes into view
+          if (!isVideoMounted) {
+            setIsVideoMounted(true);
+            
+            // Preload the video with metadata
+            const videoType = videoSrc.endsWith('.mp4') ? 'video/mp4' : 
+                             videoSrc.endsWith('.webm') ? 'video/webm' : 
+                             videoSrc.endsWith('.mov') ? 'video/quicktime' : 'video/mp4';
+            
+            videoPreloader.preloadVideo(
+              [{ src: videoSrc, type: videoType }],
+              { 
+                metadataOnly: isMobile, 
+                priority: 1,
+                onComplete: () => {
+                  setIsVideoLoaded(true);
+                  
+                  // Play video when ready and in view
+                  if (videoRef.current && entry.isIntersecting) {
+                    videoRef.current.play().catch(error => {
+                      console.error("Error playing video:", error);
+                    });
+                  }
+                }
+              }
+            );
+          } else if (videoRef.current && isVideoLoaded) {
+            // If video is already loaded and comes back into view, play it
+            videoRef.current.play().catch(error => {
+              console.error("Error playing video:", error);
+            });
+          }
         } else if (videoRef.current) {
+          // Pause video when out of view
           videoRef.current.pause();
         }
       },
-      { threshold: 0.3 }
+      { 
+        threshold: 0.3,
+        rootMargin: '100px 0px'  // Start loading slightly before it comes into view
+      }
     );
     
     if (sectionRef.current) {
@@ -137,32 +253,56 @@ export default function VideoSection({ title, videoSrc, description, reverse = f
         observer.unobserve(sectionRef.current);
       }
     };
-  }, []);
+  }, [videoSrc, isMobile, isVideoMounted, isVideoLoaded]);
+  
+  // Handle video loaded event
+  const handleVideoLoaded = () => {
+    setIsVideoLoaded(true);
+  };
   
   return (
-    <SectionContainer ref={sectionRef} $reverse={reverse}>
+    <SectionContainer ref={sectionRef} $reverse={reverse && !isMobile}>
       <motion.div
         style={{ opacity, scale }}
-        initial={{ x: reverse ? 50 : -50, opacity: 0 }}
+        initial={{ x: reverse && !isMobile ? 50 : -50, opacity: 0 }}
         whileInView={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true, margin: "-100px" }}
       >
         <VideoContainer>
-          <VideoElement
-            ref={videoRef}
-            muted
-            loop
-            playsInline
-            src={videoSrc}
-            poster="/images/placeholder.jpg"
-          />
+          {!isVideoMounted && posterSrc && (
+            <PosterImage 
+              src={posterSrc} 
+              alt={title} 
+              loading="lazy"
+              decoding="async"
+            />
+          )}
+          
+          {!isVideoMounted && !posterSrc && (
+            <LoadingPlaceholder>
+              {/* Empty placeholder until video loads */}
+            </LoadingPlaceholder>
+          )}
+          
+          {isVideoMounted && (
+            <VideoElement
+              ref={videoRef}
+              muted
+              loop
+              playsInline
+              src={videoSrc}
+              poster={posterSrc}
+              onLoadedData={handleVideoLoaded}
+              preload={isMobile ? "metadata" : "auto"}
+            />
+          )}
         </VideoContainer>
       </motion.div>
       
       <ContentContainer>
         <motion.div
-          initial={{ x: reverse ? -50 : 50, opacity: 0 }}
+          initial={{ x: reverse && !isMobile ? -50 : 50, opacity: 0 }}
           whileInView={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
           viewport={{ once: true, margin: "-100px" }}

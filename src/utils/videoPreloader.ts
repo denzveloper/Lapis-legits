@@ -39,6 +39,24 @@ export interface PreloadOptions {
    * @param error - Error object or message
    */
   onError?: (error: Error | string) => void;
+  
+  /**
+   * Whether to use the browser cache
+   * @default true
+   */
+  useCache?: boolean;
+  
+  /**
+   * Time in milliseconds after which a cached video is considered stale and should be re-preloaded
+   * @default 3600000 (1 hour)
+   */
+  cacheDuration?: number;
+  
+  /**
+   * Whether to use low-quality placeholders initially
+   * @default false
+   */
+  useLowQualityPlaceholder?: boolean;
 }
 
 // Store preloaded video elements to prevent duplicate preloading
@@ -46,7 +64,26 @@ const preloadCache = new Map<string, {
   element: HTMLVideoElement;
   status: 'loading' | 'loaded' | 'error';
   priority: number;
+  timestamp: number; // When the video was cached
 }>();
+
+/**
+ * TypeScript definition for the Network Information API that might not be in standard lib
+ */
+interface NetworkInformation {
+  effectiveType: string;
+  addEventListener: (type: string, listener: EventListener) => void;
+  removeEventListener: (type: string, listener: EventListener) => void;
+}
+
+/**
+ * Extended Navigator interface with connection property
+ */
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformation;
+  mozConnection?: NetworkInformation;
+  webkitConnection?: NetworkInformation;
+}
 
 /**
  * Queue for managing preload requests
@@ -59,9 +96,47 @@ class PreloadQueue {
     id: string;
   }> = [];
   private activePreloads = 0;
-  private readonly MAX_CONCURRENT = 2; // Maximum number of videos to preload at once
+  private maxConcurrent = 2; // Maximum number of videos to preload at once
+  private readonly CONNECTION_AWARE = true; // Adjust preloading based on connection type
   
-  private constructor() {}
+  private constructor() {
+    // Try to adapt to network conditions
+    this.adaptToNetworkConditions();
+  }
+  
+  // Adapt preloading strategy based on network conditions
+  private adaptToNetworkConditions(): void {
+    if (!this.CONNECTION_AWARE || typeof navigator === 'undefined') {
+      return;
+    }
+    
+    // Using the Network Information API if available
+    const nav = navigator as NavigatorWithConnection;
+    const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
+    
+    if (connection && connection.effectiveType) {
+      // Adjust maxConcurrent based on connection quality
+      switch (connection.effectiveType) {
+        case 'slow-2g':
+        case '2g':
+          this.maxConcurrent = 1;
+          break;
+        case '3g':
+          this.maxConcurrent = 2;
+          break;
+        case '4g':
+          this.maxConcurrent = 3;
+          break;
+        default:
+          this.maxConcurrent = 2;
+      }
+    }
+    
+    // Listen for changes in connection quality
+    if (connection && typeof connection.addEventListener === 'function') {
+      connection.addEventListener('change', this.adaptToNetworkConditions.bind(this));
+    }
+  }
   
   public static getInstance(): PreloadQueue {
     if (!PreloadQueue.instance) {
@@ -85,7 +160,7 @@ class PreloadQueue {
    * Process the preload queue, starting preloads as capacity allows
    */
   private processQueue(): void {
-    if (this.activePreloads >= this.MAX_CONCURRENT || this.queue.length === 0) {
+    if (this.activePreloads >= this.maxConcurrent || this.queue.length === 0) {
       return;
     }
     
@@ -127,6 +202,30 @@ class PreloadQueue {
   public size(): number {
     return this.queue.length;
   }
+  
+  /**
+   * Pause all active preloads
+   * Useful when user is actively viewing content to free up bandwidth
+   */
+  public pauseAllPreloads(): void {
+    preloadCache.forEach((cache) => {
+      if (cache.status === 'loading') {
+        cache.element.setAttribute('preload', 'none');
+      }
+    });
+  }
+  
+  /**
+   * Resume all paused preloads
+   */
+  public resumeAllPreloads(): void {
+    preloadCache.forEach((cache) => {
+      if (cache.status === 'loading') {
+        cache.element.setAttribute('preload', 'auto');
+        cache.element.load();
+      }
+    });
+  }
 }
 
 /**
@@ -134,6 +233,13 @@ class PreloadQueue {
  */
 const generateVideoId = (sources: VideoSource[]): string => {
   return sources.map(source => source.src).join('|');
+};
+
+/**
+ * Check if a cached video is stale based on cacheDuration
+ */
+const isCacheStale = (cache: { timestamp: number }, cacheDuration: number): boolean => {
+  return Date.now() - cache.timestamp > cacheDuration;
 };
 
 /**
@@ -150,15 +256,24 @@ export const preloadVideo = (
   videoId?: string
 ): HTMLVideoElement | null => {
   const id = videoId || generateVideoId(sources);
+  const cacheDuration = options.cacheDuration || 3600000; // Default: 1 hour
   
-  // If already in cache and loaded, return immediately
+  // If already in cache and loaded, check if cache is still valid
   if (preloadCache.has(id)) {
     const cached = preloadCache.get(id);
-    if (cached && (cached.status === 'loaded' || cached.priority > (options.priority || 1))) {
+    
+    // If cache is stale, remove it and preload again
+    if (cached && cached.status === 'loaded' && options.useCache !== false && !isCacheStale(cached, cacheDuration)) {
       options.onComplete?.();
+      return cached.element;
+    } else if (cached && cached.priority > (options.priority || 1)) {
       return cached.element;
     }
   }
+  
+  // Check if the browser supports IntersectionObserver for lazy loading
+  const supportsLazyLoading = 'loading' in HTMLImageElement.prototype || 
+                             typeof IntersectionObserver !== 'undefined';
   
   // Create a new video element for preloading
   const videoElement = document.createElement('video');
@@ -167,11 +282,19 @@ export const preloadVideo = (
   videoElement.playsInline = true; // Required for mobile
   videoElement.setAttribute('preload', options.metadataOnly ? 'metadata' : 'auto');
   
+  if (supportsLazyLoading) {
+    videoElement.setAttribute('loading', 'lazy');
+  }
+  
+  // Apply optimization attributes
+  videoElement.setAttribute('decoding', 'async');
+  
   // Add video to cache immediately to prevent duplicate preloading
   preloadCache.set(id, {
     element: videoElement,
     status: 'loading',
-    priority: options.priority || 1
+    priority: options.priority || 1,
+    timestamp: Date.now()
   });
   
   // Set up event listeners for tracking progress
@@ -180,7 +303,8 @@ export const preloadVideo = (
       preloadCache.set(id, { 
         element: videoElement, 
         status: 'loaded',
-        priority: options.priority || 1
+        priority: options.priority || 1,
+        timestamp: Date.now()
       });
       options.onProgress?.(1);
       options.onComplete?.();
@@ -202,7 +326,8 @@ export const preloadVideo = (
         preloadCache.set(id, { 
           element: videoElement, 
           status: 'loaded',
-          priority: options.priority || 1
+          priority: options.priority || 1,
+          timestamp: Date.now()
         });
         options.onComplete?.();
       }
@@ -215,7 +340,8 @@ export const preloadVideo = (
     preloadCache.set(id, { 
       element: videoElement, 
       status: 'loaded',
-      priority: options.priority || 1
+      priority: options.priority || 1,
+      timestamp: Date.now()
     });
     options.onProgress?.(1);
     options.onComplete?.();
@@ -225,7 +351,8 @@ export const preloadVideo = (
     preloadCache.set(id, { 
       element: videoElement, 
       status: 'error',
-      priority: options.priority || 1
+      priority: options.priority || 1,
+      timestamp: Date.now()
     });
     options.onError?.(new Error(`Failed to preload video: ${e}`));
   });
@@ -248,36 +375,26 @@ export const preloadVideo = (
 };
 
 /**
- * Queue a video for preloading based on priority
+ * Add a video to the preload queue
  * 
  * @param sources - Array of video sources in different formats
  * @param options - Preloading options
- * @returns Unique ID for the queued video
+ * @returns The ID of the video in the queue
  */
 export const queueVideoPreload = (
   sources: VideoSource[],
   options: PreloadOptions = {}
 ): string => {
-  const id = generateVideoId(sources);
-  
-  // If already in cache and loaded, don't queue again
-  if (preloadCache.has(id)) {
-    const cached = preloadCache.get(id);
-    if (cached && cached.status === 'loaded') {
-      options.onComplete?.();
-      return id;
-    }
-  }
-  
-  // Add to queue
-  PreloadQueue.getInstance().add(sources, options, id);
-  return id;
+  const videoId = generateVideoId(sources);
+  const queue = PreloadQueue.getInstance();
+  queue.add(sources, options, videoId);
+  return videoId;
 };
 
 /**
- * Preload multiple videos with assigned priorities
+ * Preload multiple videos at once
  * 
- * @param videosToPreload - Array of video sources and their preload options
+ * @param videosToPreload - Array of videos to preload with their options
  */
 export const preloadVideos = (
   videosToPreload: Array<{
@@ -285,69 +402,102 @@ export const preloadVideos = (
     options?: PreloadOptions;
   }>
 ): void => {
-  // Sort by priority
-  const sortedVideos = [...videosToPreload].sort((a, b) => {
-    return (b.options?.priority || 1) - (a.options?.priority || 1);
-  });
-  
-  // Queue each video for preloading
-  sortedVideos.forEach(video => {
-    queueVideoPreload(video.sources, video.options);
+  videosToPreload.forEach(({ sources, options = {} }) => {
+    queueVideoPreload(sources, options);
   });
 };
 
 /**
- * Get a preloaded video element if available
+ * Get a previously preloaded video from the cache
  * 
- * @param sources - Array of video sources to look up
- * @returns The preloaded video element or null if not found
+ * @param sources - Array of video sources to identify the video
+ * @returns HTMLVideoElement if found in cache, null otherwise
  */
 export const getPreloadedVideo = (sources: VideoSource[]): HTMLVideoElement | null => {
   const id = generateVideoId(sources);
   const cached = preloadCache.get(id);
   
   if (cached && cached.status === 'loaded') {
-    // Clone the element to avoid conflicts with the preloaded version
-    const clonedVideo = cached.element.cloneNode(true) as HTMLVideoElement;
-    clonedVideo.style.display = '';
-    return clonedVideo;
+    return cached.element;
   }
   
   return null;
 };
 
 /**
- * Clear all preloaded videos from cache to free memory
+ * Clear all preloaded videos from the cache
  */
 export const clearPreloadCache = (): void => {
-  // Remove all video elements from DOM
   preloadCache.forEach(cached => {
-    if (cached.element.parentNode) {
+    if (cached.element && cached.element.parentNode) {
       cached.element.parentNode.removeChild(cached.element);
     }
   });
   
-  // Clear the cache
   preloadCache.clear();
-  
-  // Clear the queue
-  PreloadQueue.getInstance().clear();
 };
 
 /**
- * Check if a video is already preloaded
+ * Check if a video is already preloaded and available in the cache
+ * 
+ * @param sources - Array of video sources to identify the video
+ * @returns Whether the video is preloaded and ready to use
  */
 export const isVideoPreloaded = (sources: VideoSource[]): boolean => {
   const id = generateVideoId(sources);
   const cached = preloadCache.get(id);
-  return cached?.status === 'loaded';
+  return Boolean(cached && cached.status === 'loaded');
 };
 
+/**
+ * Pause all active preloads to conserve bandwidth
+ * Useful when the user is actively viewing a video
+ */
+export const pauseAllPreloads = (): void => {
+  const queue = PreloadQueue.getInstance();
+  queue.pauseAllPreloads();
+};
+
+/**
+ * Resume all previously paused preloads
+ */
+export const resumeAllPreloads = (): void => {
+  const queue = PreloadQueue.getInstance();
+  queue.resumeAllPreloads();
+};
+
+/**
+ * Clean up stale videos from the cache
+ * @param maxAge - Maximum age in milliseconds before a video is considered stale (default: 1 hour)
+ */
+export const cleanupStaleCache = (maxAge: number = 3600000): void => {
+  const now = Date.now();
+  const staleIds: string[] = [];
+  
+  preloadCache.forEach((cache, id) => {
+    if (now - cache.timestamp > maxAge) {
+      staleIds.push(id);
+    }
+  });
+  
+  staleIds.forEach(id => {
+    const cached = preloadCache.get(id);
+    if (cached && cached.element && cached.element.parentNode) {
+      cached.element.parentNode.removeChild(cached.element);
+    }
+    preloadCache.delete(id);
+  });
+};
+
+// Export all functions as a default object for easier imports
 export default {
   preloadVideo,
   queueVideoPreload,
   preloadVideos,
   getPreloadedVideo,
   clearPreloadCache,
-  isVideoPreloaded
+  isVideoPreloaded,
+  pauseAllPreloads,
+  resumeAllPreloads,
+  cleanupStaleCache
 }; 

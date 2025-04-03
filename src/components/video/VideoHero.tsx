@@ -69,6 +69,16 @@ const Overlay = styled(motion.div)`
   padding: 0 var(--spacing-lg);
   text-align: center;
   z-index: 1;
+  
+  @media (max-width: 768px) {
+    padding: 0 var(--spacing-md);
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0 var(--spacing-sm);
+    justify-content: flex-end;
+    padding-bottom: 25%;
+  }
 `;
 
 const Title = styled(motion.h1)`
@@ -81,7 +91,13 @@ const Title = styled(motion.h1)`
   
   @media (max-width: 768px) {
     max-width: 100%;
-    padding: 0 var(--spacing-md);
+    padding: 0;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  @media (max-width: 480px) {
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
   }
 `;
 
@@ -94,7 +110,13 @@ const Subtitle = styled(motion.p)`
   
   @media (max-width: 768px) {
     max-width: 100%;
-    padding: 0 var(--spacing-md);
+    padding: 0;
+    font-size: clamp(0.875rem, 2vw, 1.25rem);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  @media (max-width: 480px) {
+    font-size: clamp(0.75rem, 1.5vw, 1rem);
   }
 `;
 
@@ -113,6 +135,18 @@ const ScrollIndicator = styled(motion.div)`
   &:hover {
     transform: translateX(-50%) translateY(5px);
   }
+  
+  @media (max-width: 768px) {
+    bottom: var(--spacing-md);
+  }
+  
+  @media (max-width: 480px) {
+    bottom: var(--spacing-sm);
+  }
+  
+  @media (max-height: 600px) {
+    display: none;
+  }
 `;
 
 const ScrollText = styled.span`
@@ -121,6 +155,10 @@ const ScrollText = styled.span`
   text-transform: uppercase;
   letter-spacing: 2px;
   color: var(--color-text-light);
+  
+  @media (max-width: 480px) {
+    font-size: 0.7rem;
+  }
 `;
 
 const ScrollIcon = styled.div`
@@ -153,6 +191,16 @@ const ScrollIcon = styled.div`
       opacity: 0;
     }
   }
+  
+  @media (max-width: 480px) {
+    width: 20px;
+    height: 35px;
+    
+    &:after {
+      width: 4px;
+      height: 4px;
+    }
+  }
 `;
 
 export default function VideoHero({
@@ -177,6 +225,26 @@ export default function VideoHero({
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const translateY = useTransform(scrollYProgress, [0, 1], [0, 150]);
   
+  // Handle device orientation changes for mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (containerRef.current) {
+        containerRef.current.style.height = `${window.innerHeight}px`;
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    
+    // Initial call
+    handleResize();
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
+  
   const handleScrollClick = () => {
     if (onScrollClick) {
       onScrollClick();
@@ -199,7 +267,12 @@ export default function VideoHero({
           aspectRatio="16 / 9"
           playOnScroll={false}
           usePreloading={true}
-          style={{ height: '100vh', width: '100vw', objectFit: 'cover' }}
+          style={{ 
+            height: '100vh', 
+            width: '100vw', 
+            objectFit: 'cover', 
+            objectPosition: 'center center' 
+          }}
           onLoadedData={() => setIsVideoLoaded(true)}
         />
       </VideoWrapper>
