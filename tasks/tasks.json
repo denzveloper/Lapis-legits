@@ -4,7 +4,7 @@
       "id": 1,
       "title": "Setup Project Repository and Core Structure",
       "description": "Initialize the Next.js/React project with basic configuration, folder structure, and essential dependencies for the LAPIS website.",
-      "status": "in-progress",
+      "status": "done",
       "dependencies": [],
       "priority": "high",
       "details": "Create a new Next.js project using 'create-next-app' with TypeScript configuration. Set up folder structure following best practices (components, pages, styles, utils, hooks, etc.). Install essential dependencies: styled-components, framer-motion, intersection-observer polyfill, and video.js. Configure ESLint and Prettier for code quality. Set up basic responsive layout components with CSS variables for theming. Implement global styling with focus on performance and minimalist design.",
@@ -88,7 +88,65 @@
       ],
       "priority": "high",
       "details": "Design and implement the landing page layout with hero section featuring the first video element. Add 2-3 additional scroll sections with video backgrounds. Implement basic fade transitions between video sections using the scroll detection system. Create responsive behavior for these sections across desktop, tablet and mobile. Add placeholder text and navigation elements. Optimize initial load time by using compressed video formats and implementing lazy loading. Ensure smooth scrolling behavior with debounced scroll events.",
-      "testStrategy": "Test scrolling performance on multiple devices. Measure time to first meaningful paint. Verify transitions work smoothly at various scroll speeds. Test with throttled network conditions."
+      "testStrategy": "Test scrolling performance on multiple devices. Measure time to first meaningful paint. Verify transitions work smoothly at various scroll speeds. Test with throttled network conditions.",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Create Hero Section with First Video Element",
+          "description": "Design and implement the hero section of the landing page featuring the first video element with proper layout and styling.",
+          "dependencies": [],
+          "details": "1. Create HTML structure for the hero section with video container\n2. Add the first video element with proper attributes (autoplay, muted, loop)\n3. Style the hero section with CSS (full-width, proper height, positioning)\n4. Add placeholder headline and subheading text with appropriate styling\n5. Ensure the video properly fills the container using object-fit\n6. Add initial navigation elements (logo, menu)\n7. Test video playback and appearance on page load\n8. Implement basic CSS animations for text elements\n9. Test on desktop viewport sizes",
+          "status": "done",
+          "parentTaskId": 3
+        },
+        {
+          "id": 2,
+          "title": "Implement Scroll Detection System",
+          "description": "Create a JavaScript system to detect scroll position and trigger video transitions based on scroll events.",
+          "dependencies": [
+            1
+          ],
+          "details": "1. Create a scroll event listener with debouncing to improve performance\n2. Implement scroll position tracking to determine which section is in view\n3. Create utility functions to calculate scroll percentages and viewport visibility\n4. Add intersection observers to detect when sections enter/exit viewport\n5. Create trigger points for video transitions based on scroll position\n6. Implement throttling mechanism to prevent performance issues\n7. Add event delegation for better performance with multiple sections\n8. Test scroll detection accuracy at different scroll speeds\n9. Verify smooth scrolling behavior",
+          "status": "pending",
+          "parentTaskId": 3
+        },
+        {
+          "id": 3,
+          "title": "Add Additional Video Sections with Fade Transitions",
+          "description": "Add 2-3 additional scroll sections with video backgrounds and implement fade transitions between them.",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "1. Create HTML structure for additional 2-3 video sections\n2. Add video elements to each section with appropriate attributes\n3. Style sections to maintain consistent layout\n4. Implement fade transition effects between video sections using CSS opacity\n5. Connect transitions to scroll detection system\n6. Add placeholder content for each section (headings, text)\n7. Ensure smooth transition timing with proper easing\n8. Test transitions at different scroll speeds\n9. Verify that videos properly pause/play based on visibility to conserve resources",
+          "status": "pending",
+          "parentTaskId": 3
+        },
+        {
+          "id": 4,
+          "title": "Implement Responsive Behavior Across Devices",
+          "description": "Ensure the landing page and video sections display correctly and function properly across desktop, tablet, and mobile devices.",
+          "dependencies": [
+            1,
+            3
+          ],
+          "details": "1. Add CSS media queries for different viewport sizes (desktop, tablet, mobile)\n2. Adjust video container sizes and positioning for each viewport\n3. Modify text sizing and positioning for readability on smaller screens\n4. Test navigation elements responsiveness\n5. Implement touch events for mobile scrolling interactions\n6. Adjust transition timing for touch devices\n7. Test on multiple device sizes using developer tools\n8. Ensure videos maintain proper aspect ratios on all devices\n9. Verify that all UI elements remain accessible on small screens",
+          "status": "pending",
+          "parentTaskId": 3
+        },
+        {
+          "id": 5,
+          "title": "Optimize Video Loading and Performance",
+          "description": "Implement video compression, lazy loading, and performance optimizations to ensure fast page load times.",
+          "dependencies": [
+            3,
+            4
+          ],
+          "details": "1. Compress video files to appropriate formats (mp4, webm) with optimal quality/size ratio\n2. Implement lazy loading for videos not in the initial viewport\n3. Add poster images for videos to display before loading\n4. Create loading states/placeholders while videos are loading\n5. Implement preloading for the next video in sequence\n6. Add fallback content for browsers that don't support video\n7. Test initial page load time and optimize if needed\n8. Implement bandwidth detection to serve appropriate video quality\n9. Add error handling for video loading failures\n10. Test performance across different connection speeds",
+          "status": "pending",
+          "parentTaskId": 3
+        }
+      ]
     },
     {
       "id": 4,

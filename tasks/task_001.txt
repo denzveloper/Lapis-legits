@@ -1,6 +1,6 @@
 # Task ID: 1
 # Title: Setup Project Repository and Core Structure
-# Status: in-progress
+# Status: done
 # Dependencies: None
 # Priority: high
 # Description: Initialize the Next.js/React project with basic configuration, folder structure, and essential dependencies for the LAPIS website.
