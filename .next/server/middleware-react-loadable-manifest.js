@@ -1,1 +1,0 @@
-self.__REACT_LOADABLE_MANIFEST="{\"app/page.tsx -> intersection-observer\":{\"id\":\"app/page.tsx -> intersection-observer\",\"files\":[\"static/chunks/_app-pages-browser_node_modules_intersection-observer_intersection-observer_js.js\"]}}"

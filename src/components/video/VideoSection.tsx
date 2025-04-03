@@ -11,7 +11,7 @@ interface VideoSectionProps {
   reverse?: boolean;
 }
 
-const SectionContainer = styled.div<{ reverse?: boolean }>`
+const SectionContainer = styled.div<{ $reverse?: boolean }>`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--spacing-lg);
@@ -22,7 +22,7 @@ const SectionContainer = styled.div<{ reverse?: boolean }>`
     gap: var(--spacing-md);
   }
   
-  ${props => props.reverse && `
+  ${props => props.$reverse && `
     direction: rtl;
     
     @media (max-width: 768px) {
@@ -140,7 +140,7 @@ export default function VideoSection({ title, videoSrc, description, reverse = f
   }, []);
   
   return (
-    <SectionContainer ref={sectionRef} reverse={reverse}>
+    <SectionContainer ref={sectionRef} $reverse={reverse}>
       <motion.div
         style={{ opacity, scale }}
         initial={{ x: reverse ? 50 : -50, opacity: 0 }}
@@ -154,10 +154,9 @@ export default function VideoSection({ title, videoSrc, description, reverse = f
             muted
             loop
             playsInline
-            poster="/images/video-poster.jpg"
-          >
-            <source src={videoSrc} type="video/mp4" />
-          </VideoElement>
+            src={videoSrc}
+            poster="/images/placeholder.jpg"
+          />
         </VideoContainer>
       </motion.div>
       

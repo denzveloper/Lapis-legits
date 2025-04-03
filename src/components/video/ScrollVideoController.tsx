@@ -86,8 +86,8 @@ const Subtitle = styled.p`
 `;
 
 // Spacer component to create scroll space
-const ScrollSpacer = styled.div<{ totalSections: number }>`
-  height: ${props => props.totalSections * 100}vh;
+const ScrollSpacer = styled.div<{ $totalSections: number }>`
+  height: ${(props: { $totalSections: number }) => props.$totalSections * 100}vh;
   position: relative;
 `;
 
@@ -180,21 +180,26 @@ const ScrollVideoController: React.FC<ScrollVideoControllerProps> = ({
   return (
     <>
       <VideoContainer>
-        {transitions.map((transition, index) => (
-          <VideoElement
-            key={transition.id}
-            ref={(el) => { videoRefs.current[index] = el; }}
-            src={transition.videoSrc}
-            loop
-            muted
-            playsInline
-            style={{ 
-              display: activeIndex === index ? 'block' : 'none',
-              opacity: activeIndex === index ? opacity : 0
-            }}
-            preload={preloadAll || index === activeIndex || index === activeIndex + 1 ? "auto" : "none"}
-          />
-        ))}
+        {transitions.map((transition, index) => {
+          const videoSrc = transition.videoSrc;
+          
+          return (
+            <VideoElement
+              key={transition.id}
+              ref={(el) => { videoRefs.current[index] = el; }}
+              src={videoSrc}
+              loop
+              muted
+              playsInline
+              poster="/videos/SAC%20Final%20Cut.mov"
+              style={{ 
+                display: activeIndex === index ? 'block' : 'none',
+                opacity: activeIndex === index ? opacity : 0
+              }}
+              preload={preloadAll || index === activeIndex || index === activeIndex + 1 ? "auto" : "none"}
+            />
+          );
+        })}
         <VideoOverlay />
         
         {currentTransition.title && (
@@ -212,7 +217,7 @@ const ScrollVideoController: React.FC<ScrollVideoControllerProps> = ({
       </VideoContainer>
       
       {/* Create spacer for scrolling */}
-      <ScrollSpacer totalSections={transitions.length} />
+      <ScrollSpacer $totalSections={transitions.length} />
     </>
   );
 };

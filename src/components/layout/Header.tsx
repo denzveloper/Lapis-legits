@@ -5,15 +5,15 @@ import styled from 'styled-components';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
-const HeaderContainer = styled.header<{ scrolled: boolean }>`
+const HeaderContainer = styled.header<{ $scrolled: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   z-index: var(--z-index-menu);
-  padding: ${props => props.scrolled ? 'var(--spacing-sm)' : 'var(--spacing-md)'} 0;
-  background-color: ${props => props.scrolled ? 'rgba(10, 10, 10, 0.95)' : 'transparent'};
-  backdrop-filter: ${props => props.scrolled ? 'blur(8px)' : 'none'};
+  padding: ${props => props.$scrolled ? 'var(--spacing-sm)' : 'var(--spacing-md)'} 0;
+  background-color: ${props => props.$scrolled ? 'rgba(10, 10, 10, 0.95)' : 'transparent'};
+  backdrop-filter: ${props => props.$scrolled ? 'blur(8px)' : 'none'};
   transition: all var(--transition-medium);
 `;
 
@@ -90,7 +90,7 @@ export default function Header() {
   }, []);
   
   return (
-    <HeaderContainer scrolled={scrolled}>
+    <HeaderContainer $scrolled={scrolled}>
       <HeaderContent>
         <Logo>
           <Link href="/">LAPIS</Link>

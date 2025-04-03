@@ -49,7 +49,7 @@ const videoTransitions = [
     id: 'hero-section',
     startPosition: 0,
     endPosition: 0.33,
-    videoSrc: '/videos/hero-video.mp4',
+    videoSrc: '/videos/SAC%20Final%20Cut.mov',
     title: 'Captivating Visual Stories That Inspire',
     subtitle: 'LAPIS creates immersive visual experiences that blend artistry with powerful storytelling'
   },
@@ -57,7 +57,7 @@ const videoTransitions = [
     id: 'commercial-section',
     startPosition: 0.33,
     endPosition: 0.66,
-    videoSrc: '/videos/commercial.mp4',
+    videoSrc: '/videos/SAC%20Final%20Cut.mov',
     title: 'Commercial Productions',
     subtitle: 'High-impact video content that drives engagement and elevates your brand'
   },
@@ -65,7 +65,7 @@ const videoTransitions = [
     id: 'documentary-section',
     startPosition: 0.66,
     endPosition: 1,
-    videoSrc: '/videos/documentary.mp4',
+    videoSrc: '/videos/SAC%20Final%20Cut.mov',
     title: 'Documentary Storytelling',
     subtitle: 'Authentic narratives that connect with audiences on a deeper level'
   }
@@ -136,20 +136,20 @@ export default function Home() {
           <SectionTitle>Our Work</SectionTitle>
           <VideoSection 
             title="Commercial Productions" 
-            videoSrc="/videos/commercial.mp4" 
+            videoSrc="/videos/SAC%20Final%20Cut.mov" 
             description="High-impact commercial video production that captures attention and drives engagement."
           />
           
           <VideoSection 
             title="Documentary" 
-            videoSrc="/videos/documentary.mp4" 
+            videoSrc="/videos/SAC%20Final%20Cut.mov" 
             description="Authentic storytelling that connects with audiences through compelling narratives."
             reverse
           />
           
           <VideoSection 
             title="Event Coverage" 
-            videoSrc="/videos/event.mp4" 
+            videoSrc="/videos/SAC%20Final%20Cut.mov" 
             description="Dynamic event documentation that preserves the energy and highlights of your special moments."
           />
         

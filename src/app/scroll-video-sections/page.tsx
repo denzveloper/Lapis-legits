@@ -41,7 +41,7 @@ const videoTransitions = [
     id: 'section-1',
     startPosition: 0,
     endPosition: 0.33,
-    videoSrc: '/videos/hero-video.mp4',
+    videoSrc: '/videos/SAC%20Final%20Cut.mov',
     title: 'Captivating Visual Stories',
     subtitle: 'Award-winning production company creating unforgettable visual experiences'
   },
@@ -49,7 +49,7 @@ const videoTransitions = [
     id: 'section-2',
     startPosition: 0.33,
     endPosition: 0.66,
-    videoSrc: '/videos/commercial.mp4',
+    videoSrc: '/videos/SAC%20Final%20Cut.mov',
     title: 'Commercial Productions',
     subtitle: 'High-impact video content that drives engagement and conversions'
   },
@@ -57,7 +57,7 @@ const videoTransitions = [
     id: 'section-3',
     startPosition: 0.66,
     endPosition: 1,
-    videoSrc: '/videos/documentary.mp4',
+    videoSrc: '/videos/SAC%20Final%20Cut.mov',
     title: 'Documentary Storytelling',
     subtitle: 'Authentic narratives that connect with audiences on a deeper level'
   }
