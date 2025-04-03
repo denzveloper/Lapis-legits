@@ -16,6 +16,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/scroll-test/page.js"
     ],
+    "/video-player-test/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/video-player-test/page.js"
+    ],
     "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
