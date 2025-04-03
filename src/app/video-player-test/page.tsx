@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
 import ScrollVideoPlayer from '../../components/video/ScrollVideoPlayer';
+import { preloadVideosInAdvance, clearVideoPreloadCache } from '../../hooks/useVideoPreload';
 
 const Container = styled.div`
   padding: 2rem;
@@ -56,6 +57,31 @@ const CodeExample = styled.pre`
   margin-bottom: 2rem;
 `;
 
+// New section for preloading demo
+const ToggleButton = styled.button`
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+
+  &:hover {
+    background-color: #2980b9;
+  }
+
+  &:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+  }
+`;
+
+const ButtonGroup = styled.div`
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+`;
+
 const VideoTest: React.FC = () => {
   // Sample video sources for testing
   const sampleVideoSources = [
@@ -71,6 +97,31 @@ const VideoTest: React.FC = () => {
       type: 'video/webm'
     }
   ];
+  
+  // Preload videos when the page loads
+  useEffect(() => {
+    // Preload videos that will be needed soon
+    preloadVideosInAdvance([
+      {
+        sources: sampleVideoSources,
+        options: {
+          priority: 2, // High priority
+        }
+      },
+      {
+        sources: shortVideoSources,
+        options: {
+          priority: 1, // Lower priority
+          metadataOnly: true // Just preload metadata to save bandwidth
+        }
+      }
+    ]);
+    
+    // Clean up preloaded videos when unmounting
+    return () => {
+      clearVideoPreloadCache();
+    };
+  }, []);
   
   return (
     <Container>
@@ -182,6 +233,101 @@ const VideoTest: React.FC = () => {
         
         <ScrollVideoPlayer
           sources={sampleVideoSources}
+        />
+      </Section>
+      
+      <Section>
+        <SectionHeader>Preloading Strategy</SectionHeader>
+        <SectionContent>
+          This page demonstrates a video preloading strategy that improves playback performance
+          by loading videos before they're needed. The videos below are preloaded as soon as the page loads
+          or when other videos come into view.
+        </SectionContent>
+        
+        <CodeExample>
+          {`
+// Preload videos that will be needed soon
+preloadVideosInAdvance([
+  {
+    sources: videoSources,
+    options: {
+      priority: 2, // Higher priority videos load first
+      metadataOnly: false // Preload the entire video
+    }
+  }
+]);
+          `}
+        </CodeExample>
+        
+        <ScrollVideoPlayer
+          sources={sampleVideoSources}
+          usePreloading={true}
+          preloadPriority={2}
+        />
+      </Section>
+      
+      <Section>
+        <SectionHeader>Preloading with Progress Indicator</SectionHeader>
+        <SectionContent>
+          The ScrollVideoPlayer component can display loading progress when preloading videos.
+          This is especially useful for larger videos or slower connections.
+        </SectionContent>
+        
+        <ScrollVideoPlayer
+          sources={shortVideoSources}
+          usePreloading={true}
+          preloadPriority={1}
+        />
+      </Section>
+      
+      <Section>
+        <SectionHeader>Comparison: With vs Without Preloading</SectionHeader>
+        <SectionContent>
+          Compare the loading behavior of videos with and without the preloading strategy.
+          The video on the left uses preloading, while the one on the right doesn't.
+        </SectionContent>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div>
+            <h3 style={{ textAlign: 'center', marginBottom: '0.5rem' }}>With Preloading</h3>
+            <ScrollVideoPlayer
+              sources={sampleVideoSources}
+              usePreloading={true}
+            />
+          </div>
+          <div>
+            <h3 style={{ textAlign: 'center', marginBottom: '0.5rem' }}>Without Preloading</h3>
+            <ScrollVideoPlayer
+              sources={sampleVideoSources}
+              usePreloading={false}
+            />
+          </div>
+        </div>
+      </Section>
+      
+      <Section>
+        <SectionHeader>Metadata-Only Preloading</SectionHeader>
+        <SectionContent>
+          For bandwidth-sensitive applications, you can preload only the video metadata.
+          This still improves initial playback time while using much less data.
+        </SectionContent>
+        
+        <CodeExample>
+          {`
+<ScrollVideoPlayer
+  sources={[
+    { src: 'path/to/video.mp4', type: 'video/mp4' }
+  ]}
+  usePreloading={true}
+  preloadMetadataOnly={true}
+/>
+          `}
+        </CodeExample>
+        
+        <ScrollVideoPlayer
+          sources={shortVideoSources}
+          usePreloading={true}
+          preloadMetadataOnly={true}
         />
       </Section>
       

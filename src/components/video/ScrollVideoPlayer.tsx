@@ -3,13 +3,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import useScrollVideo from '../../hooks/useScrollVideo';
+import useVideoPreload, { preloadVideosInAdvance } from '../../hooks/useVideoPreload';
+import { VideoSource } from '../../utils/videoPreloader';
 
 // Types
-interface VideoSource {
-  src: string;
-  type: string;
-}
-
 interface ScrollVideoPlayerProps {
   /**
    * Array of video sources in different formats
@@ -66,6 +63,24 @@ interface ScrollVideoPlayerProps {
    * Custom error message displayed when video can't be loaded
    */
   errorMessage?: string;
+  
+  /**
+   * Whether to use the preloading strategy
+   * @default true
+   */
+  usePreloading?: boolean;
+  
+  /**
+   * Preload only metadata (faster but no full preloading benefit)
+   * @default false
+   */
+  preloadMetadataOnly?: boolean;
+  
+  /**
+   * Priority level for preloading (higher numbers are loaded first)
+   * @default 1
+   */
+  preloadPriority?: number;
 }
 
 // Styled Components
@@ -147,6 +162,37 @@ const ScrollProgressIndicator = styled.div<{ progress: number }>`
   transition: width 0.1s ease;
 `;
 
+// Additional styled component for preload overlay
+const PreloadOverlay = styled.div<{ progress: number }>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  
+  .preload-progress {
+    width: 80%;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+    
+    .progress-bar {
+      height: 100%;
+      width: ${props => Math.round(props.progress * 100)}%;
+      background-color: #3498db;
+      transition: width 0.3s ease;
+    }
+  }
+`;
+
 // Icons
 const MuteIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor">
@@ -171,10 +217,13 @@ const ScrollVideoPlayer: React.FC<ScrollVideoPlayerProps> = ({
   playThreshold = 0.3,
   className,
   style,
-  errorMessage = 'Error loading video'
+  errorMessage = 'Error loading video',
+  usePreloading = true,
+  preloadMetadataOnly = false,
+  preloadPriority = 1
 }) => {
   // Refs and state
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [containerRef, scrollState] = useScrollVideo<HTMLDivElement>();
   
   const [isMuted, setIsMuted] = useState(initiallyMuted);
@@ -182,6 +231,23 @@ const ScrollVideoPlayer: React.FC<ScrollVideoPlayerProps> = ({
   const [showControls, setShowControls] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  
+  // Use our video preload hook if preloading is enabled
+  const preload = usePreloading ? useVideoPreload(sources, {
+    metadataOnly: preloadMetadataOnly,
+    priority: preloadPriority
+  }) : null;
+  
+  // Combine error states from both sources
+  const combinedError = error || (preload?.error ?? null);
+  
+  // Set local video reference when preloaded video becomes available
+  useEffect(() => {
+    if (preload?.videoElement) {
+      videoRef.current = preload.videoElement;
+      setIsLoaded(true);
+    }
+  }, [preload?.videoElement]);
   
   // Toggle mute state
   const toggleMute = () => {
@@ -193,18 +259,29 @@ const ScrollVideoPlayer: React.FC<ScrollVideoPlayerProps> = ({
   
   // Handle video errors
   const handleVideoError = () => {
-    setError(errorMessage);
+    // Only set error if we're not using preloading (preloading has its own error handling)
+    if (!usePreloading) {
+      setError(errorMessage);
+    }
   };
   
   // Handle when video metadata is loaded
   const handleVideoLoaded = () => {
-    setIsLoaded(true);
+    // Only set loaded state if we're not using preloading (preloading has its own loading state)
+    if (!usePreloading) {
+      setIsLoaded(true);
+    }
   };
   
   // Control playback based on scroll position
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement || !playOnScroll) return;
+    
+    // Don't attempt to play until video is ready
+    if (usePreloading && (!preload?.isLoaded || preload?.isLoading)) {
+      return;
+    }
     
     // Check if the video is sufficiently in view
     if (scrollState.isIntersecting && scrollState.intersectionRatio >= playThreshold) {
@@ -230,12 +307,37 @@ const ScrollVideoPlayer: React.FC<ScrollVideoPlayerProps> = ({
     scrollState.intersectionRatio, 
     playThreshold, 
     isPlaying, 
-    playOnScroll
+    playOnScroll,
+    usePreloading,
+    preload?.isLoaded,
+    preload?.isLoading
   ]);
   
   // Show/hide controls when hovering over the video
   const handleMouseEnter = () => setShowControls(true);
   const handleMouseLeave = () => setShowControls(false);
+  
+  // Preload videos for sections that will be viewed next
+  // This is a demonstration of how you could preload multiple videos
+  useEffect(() => {
+    // Start preloading next videos when current video is in view
+    if (scrollState.isIntersecting && sources.length > 0) {
+      // This would typically be dynamically determined based on page content
+      // For this example, we're using static sources
+      preloadVideosInAdvance([
+        // Example of preloading additional videos
+        // In a real implementation, these would be the videos likely to be viewed next
+        // based on navigation patterns or page structure
+        {
+          sources: sources, // Using same sources for demo
+          options: {
+            priority: preloadPriority - 1, // Lower priority than current video
+            metadataOnly: true // Only preload metadata for these
+          }
+        }
+      ]);
+    }
+  }, [scrollState.isIntersecting, preloadPriority, sources]);
   
   return (
     <VideoContainer 
@@ -246,25 +348,71 @@ const ScrollVideoPlayer: React.FC<ScrollVideoPlayerProps> = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <VideoElement
-        ref={videoRef}
-        poster={poster}
-        loop={loop}
-        muted={isMuted}
-        playsInline
-        onError={handleVideoError}
-        onLoadedMetadata={handleVideoLoaded}
-      >
-        {sources.map((source, index) => (
-          <source key={index} src={source.src} type={source.type} />
-        ))}
-        Your browser does not support the video tag.
-      </VideoElement>
+      {(!usePreloading || !preload) && (
+        <VideoElement
+          ref={videoRef}
+          poster={poster}
+          loop={loop}
+          muted={isMuted}
+          playsInline
+          onError={handleVideoError}
+          onLoadedMetadata={handleVideoLoaded}
+        >
+          {sources.map((source, index) => (
+            <source key={index} src={source.src} type={source.type} />
+          ))}
+          Your browser does not support the video tag.
+        </VideoElement>
+      )}
+      
+      {/* When using preloading, the video element comes from the preload hook */}
+      {/* We need to handle the preloaded video element properly */}
+      {usePreloading && preload?.videoElement && (
+        <div style={{ display: 'contents' }}>
+          {/* Cannot use cloneElement on DOM elements directly, set attributes manually instead */}
+          <video
+            ref={videoRef}
+            poster={poster}
+            loop={loop}
+            muted={isMuted}
+            playsInline
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover'
+            }}
+          >
+            {Array.from(preload.videoElement.children).map((child, index) => {
+              // Clone source elements from the preloaded video
+              if (child instanceof HTMLSourceElement) {
+                return (
+                  <source 
+                    key={index} 
+                    src={child.src} 
+                    type={child.type} 
+                  />
+                );
+              }
+              return null;
+            })}
+          </video>
+        </div>
+      )}
+      
+      {/* Preloading overlay while video is being loaded */}
+      {usePreloading && preload?.isLoading && (
+        <PreloadOverlay progress={preload.progress}>
+          <div>Loading video... {Math.round(preload.progress * 100)}%</div>
+          <div className="preload-progress">
+            <div className="progress-bar" />
+          </div>
+        </PreloadOverlay>
+      )}
       
       {/* Error message display */}
-      {error && (
+      {combinedError && (
         <ErrorDisplay>
-          <h3>⚠️ {error}</h3>
+          <h3>⚠️ {combinedError}</h3>
           <p>Please try refreshing the page or check your connection.</p>
         </ErrorDisplay>
       )}

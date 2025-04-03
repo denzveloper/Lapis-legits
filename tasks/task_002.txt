@@ -48,7 +48,7 @@ Testing approach:
 - Ensure proper cleanup of video resources on unmount
 - Test with different video formats (mp4, webm)
 
-## 3. Implement video preloading strategy [pending]
+## 3. Implement video preloading strategy [done]
 ### Dependencies: 2.2
 ### Description: Create a preloading mechanism to improve video playback performance by loading videos before they're needed.
 ### Details:
