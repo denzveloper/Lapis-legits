@@ -5,6 +5,9 @@ import styled from 'styled-components';
 import useScrollVideo from '../../hooks/useScrollVideo';
 import { VideoSource } from '../../utils/videoPreloader';
 import { Effect, fadeEffect } from '../../utils/videoEffects';
+import VideoErrorBoundary from './VideoErrorBoundary';
+import VideoPlaceholder from './VideoPlaceholder';
+import { createVideoErrorHandler, VideoError } from '../../utils/videoErrorHandling';
 
 // Types for component props
 interface CanvasVideoRendererProps {
@@ -203,9 +206,21 @@ const CanvasVideoRenderer: React.FC<CanvasVideoRendererProps> = ({
   const [isMuted, setIsMuted] = useState(initiallyMuted);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControlsState, setShowControlsState] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<VideoError | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadProgress, setLoadProgress] = useState(0);
   const [videoDimensions, setVideoDimensions] = useState({ width: 0, height: 0 });
+  
+  // Create error handler with retry logic
+  const errorHandler = useRef(createVideoErrorHandler({
+    maxRetries: 3,
+    retryDelay: 2000,
+    loadTimeout: 15000,
+    onErrorLogged: (videoError, attempt) => {
+      console.log(`Video error (attempt ${attempt}):`, videoError.message);
+    }
+  })).current;
   
   // Toggle mute state
   const toggleMute = () => {
@@ -216,9 +231,76 @@ const CanvasVideoRenderer: React.FC<CanvasVideoRendererProps> = ({
   };
   
   // Handle video errors
-  const handleVideoError = () => {
-    setError('Error loading video');
-    cancelAnimationFrame();
+  const handleVideoError = (event: React.SyntheticEvent<HTMLVideoElement, Event> | Event | string) => {
+    // Use our error handler utility
+    const eventToPass = event instanceof Event ? event : 
+      typeof event === 'string' ? event : 
+      event.nativeEvent;
+      
+    errorHandler.handleError(
+      eventToPass, 
+      (videoError) => {
+        setError(videoError);
+        setIsLoading(false);
+        cancelAnimationFrame();
+      },
+      videoRef.current || undefined
+    );
+  };
+  
+  // Handle timeout cases separately
+  const handleTimeout = () => {
+    errorHandler.handleError(
+      'timeout', 
+      (videoError) => {
+        setError(videoError);
+        setIsLoading(false);
+        cancelAnimationFrame();
+      },
+      videoRef.current || undefined
+    );
+  };
+  
+  // Handle retry button click
+  const handleRetry = () => {
+    if (!videoRef.current) return;
+    
+    setError(null);
+    setIsLoading(true);
+    setLoadProgress(0);
+    
+    // Reset the error handler's retry count
+    errorHandler.resetRetryCount();
+    
+    // Reload the video
+    videoRef.current.load();
+    
+    // Set up a timeout for the retry
+    errorHandler.setupLoadTimeout(videoRef.current, () => {
+      handleTimeout();
+    });
+  };
+  
+  // Handle video progress
+  const handleProgress = () => {
+    if (!videoRef.current || videoRef.current.readyState < 2) return;
+  
+    const video = videoRef.current;
+    
+    // Calculate loading progress
+    if (video.buffered.length > 0) {
+      const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+      const duration = video.duration;
+      const progress = bufferedEnd / duration;
+      
+      setLoadProgress(progress);
+      
+      // Consider fully loaded when buffered reaches the end or is very close
+      if (Math.abs(bufferedEnd - duration) < 0.1) {
+        setIsLoading(false);
+        setIsLoaded(true);
+      }
+    }
   };
   
   // Handle when video metadata is loaded
@@ -228,7 +310,21 @@ const CanvasVideoRenderer: React.FC<CanvasVideoRendererProps> = ({
         width: videoRef.current.videoWidth,
         height: videoRef.current.videoHeight
       });
-      setIsLoaded(true);
+      
+      // Clear any timeout since metadata is loaded
+      errorHandler.clearLoadTimeout();
+      
+      // Start checking buffer progress
+      const progressInterval = setInterval(() => {
+        if (videoRef.current) {
+          handleProgress();
+        } else {
+          clearInterval(progressInterval);
+        }
+      }, 500);
+      
+      // Clean up interval when component unmounts or video fully loads
+      return () => clearInterval(progressInterval);
     }
   };
   
@@ -294,6 +390,29 @@ const CanvasVideoRenderer: React.FC<CanvasVideoRendererProps> = ({
     }
   }, []);
   
+  // Set up initial error handling timeout when sources change
+  useEffect(() => {
+    setIsLoading(true);
+    setLoadProgress(0);
+    setError(null);
+    setIsLoaded(false);
+    
+    // Wait for video reference to be available
+    if (!videoRef.current) return;
+    
+    // Set up timeout for initial load
+    errorHandler.setupLoadTimeout(videoRef.current, () => {
+      handleTimeout();
+    });
+    
+    // Reset retry count for new sources
+    errorHandler.resetRetryCount();
+    
+    return () => {
+      errorHandler.clearLoadTimeout();
+    };
+  }, [sources]);
+  
   // Update canvas size on window resize
   useEffect(() => {
     updateCanvasSize();
@@ -337,7 +456,11 @@ const CanvasVideoRenderer: React.FC<CanvasVideoRendererProps> = ({
           })
           .catch(err => {
             console.error('Error playing video:', err);
-            setError('Could not autoplay video. Please interact with the page first.');
+            setError({
+              type: 'unknown',
+              message: 'Could not autoplay video. Please interact with the page first.',
+              retryable: true
+            });
           });
       }
     } else if (isPlaying) {
@@ -357,6 +480,7 @@ const CanvasVideoRenderer: React.FC<CanvasVideoRendererProps> = ({
   useEffect(() => {
     return () => {
       cancelAnimationFrame();
+      errorHandler.clearLoadTimeout();
       if (videoRef.current) {
         videoRef.current.pause();
         videoRef.current.src = '';
@@ -370,58 +494,80 @@ const CanvasVideoRenderer: React.FC<CanvasVideoRendererProps> = ({
   const handleMouseLeave = () => setShowControlsState(false);
   
   return (
-    <RendererContainer 
-      ref={containerRef}
-      aspectRatio={aspectRatio}
-      className={className}
-      style={style}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+    <VideoErrorBoundary
+      onError={(error) => {
+        console.error('Error boundary caught:', error);
+      }}
+      onRetry={handleRetry}
     >
-      {/* Hidden video element that serves as the source */}
-      <HiddenVideo
-        ref={videoRef}
-        poster={poster}
-        loop={loop}
-        muted={isMuted}
-        playsInline
-        onError={handleVideoError}
-        onLoadedMetadata={handleVideoLoaded}
+      <RendererContainer 
+        ref={containerRef}
+        aspectRatio={aspectRatio}
+        className={className}
+        style={style}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
-        {sources.map((source, index) => (
-          <source key={index} src={source.src} type={source.type} />
-        ))}
-        Your browser does not support the video tag.
-      </HiddenVideo>
-      
-      {/* Canvas element for rendering */}
-      <CanvasElement ref={canvasRef} />
-      
-      {/* Error message display */}
-      {error && (
-        <ErrorDisplay>
-          <h3>⚠️ {error}</h3>
-          <p>Please try refreshing the page or check your connection.</p>
-        </ErrorDisplay>
-      )}
-      
-      {/* Controls overlay */}
-      {showControls && (
-        <ControlsOverlay isVisible={showControlsState}>
-          <ControlButton onClick={toggleMute} aria-label={isMuted ? "Unmute" : "Mute"}>
-            {isMuted ? <UnmuteIcon /> : <MuteIcon />}
-          </ControlButton>
-          
-          <div>
-            {isPlaying ? "Playing" : "Paused"} 
-            {isLoaded && ` - ${Math.round(scrollState.scrollProgress * 100)}%`}
-          </div>
-        </ControlsOverlay>
-      )}
-      
-      {/* Scroll progress indicator */}
-      <ScrollProgressIndicator progress={scrollState.scrollProgress} />
-    </RendererContainer>
+        {/* Hidden video element that serves as the source */}
+        <HiddenVideo
+          ref={videoRef}
+          poster={poster}
+          loop={loop}
+          muted={isMuted}
+          playsInline
+          onError={handleVideoError}
+          onLoadedMetadata={handleVideoLoaded}
+        >
+          {sources.map((source, index) => (
+            <source key={index} src={source.src} type={source.type} />
+          ))}
+          Your browser does not support the video tag.
+        </HiddenVideo>
+        
+        {/* Canvas element for rendering */}
+        <CanvasElement ref={canvasRef} />
+        
+        {/* Loading placeholder */}
+        {isLoading && !error && (
+          <VideoPlaceholder 
+            state="loading"
+            progress={loadProgress}
+            aspectRatio={aspectRatio}
+            thumbnailSrc={poster}
+          />
+        )}
+        
+        {/* Error message display */}
+        {error && (
+          <VideoPlaceholder
+            state="error"
+            errorMessage={error.message}
+            onRetry={handleRetry}
+            aspectRatio={aspectRatio}
+            thumbnailSrc={poster}
+          />
+        )}
+        
+        {/* Controls overlay - only show when video is loaded and playing */}
+        {showControls && isLoaded && !error && (
+          <ControlsOverlay isVisible={showControlsState}>
+            <ControlButton onClick={toggleMute} aria-label={isMuted ? "Unmute" : "Mute"}>
+              {isMuted ? <UnmuteIcon /> : <MuteIcon />}
+            </ControlButton>
+            
+            <div>
+              {isPlaying ? "Playing" : "Paused"} 
+              {isLoaded && ` - ${Math.round(scrollState.scrollProgress * 100)}%`}
+            </div>
+          </ControlsOverlay>
+        )}
+        
+        {/* Scroll progress indicator - only show when loaded */}
+        {isLoaded && !error && (
+          <ScrollProgressIndicator progress={scrollState.scrollProgress} />
+        )}
+      </RendererContainer>
+    </VideoErrorBoundary>
   );
 };
 

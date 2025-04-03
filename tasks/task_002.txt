@@ -1,6 +1,6 @@
 # Task ID: 2
 # Title: Implement Basic Video Player and Scroll Detection
-# Status: pending
+# Status: done
 # Dependencies: 1
 # Priority: high
 # Description: Create the foundation for the video playback system with scroll-triggered functionality that will power the dynamic video experience.
@@ -86,7 +86,7 @@ Testing approach:
 - Verify basic effects apply correctly based on scroll position
 - Check for memory leaks during continuous scrolling
 
-## 5. Implement error handling and placeholder videos [pending]
+## 5. Implement error handling and placeholder videos [done]
 ### Dependencies: 2.2, 2.3
 ### Description: Create comprehensive error handling for video loading failures and implement placeholder videos for development and fallback purposes.
 ### Details:
