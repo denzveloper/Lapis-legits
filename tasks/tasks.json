@@ -152,13 +152,58 @@
       "id": 4,
       "title": "Build Basic Portfolio Display Mechanism",
       "description": "Create the portfolio page with video thumbnails and basic playback functionality to showcase LAPIS's work.",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         2
       ],
       "priority": "medium",
       "details": "Design and implement a grid-based portfolio layout with video thumbnails. Create thumbnail components that load video previews efficiently. Implement click-to-expand functionality for full-screen video playback. Add basic filtering capability by project category. Include project metadata display (client, date, services provided). Ensure responsive grid layout that adjusts columns based on screen size. Implement keyboard navigation for accessibility. Add placeholder content for development and testing.",
-      "testStrategy": "Test thumbnail loading performance. Verify full-screen playback works across browsers. Test keyboard navigation and accessibility with screen readers. Confirm responsive behavior on various screen sizes."
+      "testStrategy": "Test thumbnail loading performance. Verify full-screen playback works across browsers. Test keyboard navigation and accessibility with screen readers. Confirm responsive behavior on various screen sizes.",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Design and implement responsive grid layout for portfolio",
+          "description": "Create a responsive grid layout for the portfolio page that adapts to different screen sizes and contains placeholders for video thumbnails.",
+          "dependencies": [],
+          "details": "Implementation steps:\n1. Create a Portfolio component with a responsive grid container using CSS Grid or Flexbox\n2. Implement media queries to adjust the number of columns based on screen width (e.g., 1 column for mobile, 2 for tablets, 3-4 for desktop)\n3. Add placeholder elements for thumbnails with appropriate aspect ratios\n4. Implement keyboard navigation between grid items for accessibility (arrow keys)\n5. Add appropriate ARIA attributes and focus management\n6. Create a structure to store and pass portfolio data (video URLs, titles, categories, etc.)\n\nTesting approach:\n- Verify responsive behavior by testing at different viewport sizes\n- Check keyboard navigation works correctly\n- Validate HTML for accessibility compliance\n- Ensure the layout maintains proper spacing and alignment",
+          "status": "done",
+          "parentTaskId": 4
+        },
+        {
+          "id": 2,
+          "title": "Build video thumbnail components with efficient loading",
+          "description": "Create thumbnail components that efficiently load and display video previews with associated metadata.",
+          "dependencies": [
+            1
+          ],
+          "details": "Implementation steps:\n1. Create a VideoThumbnail component that accepts video data props (URL, title, client, date, services)\n2. Implement lazy loading for thumbnails using Intersection Observer API or a library\n3. Generate/display static thumbnail images instead of loading actual videos until interaction\n4. Add hover effects to indicate interactivity\n5. Display basic metadata (title, client) on the thumbnail\n6. Add loading states and fallback images for failed loads\n7. Optimize image loading with appropriate sizes and formats\n\nTesting approach:\n- Test loading performance with multiple thumbnails\n- Verify lazy loading works correctly when scrolling\n- Ensure hover states and visual feedback work properly\n- Check that metadata displays correctly\n- Test with various image/video formats and sizes",
+          "status": "done",
+          "parentTaskId": 4
+        },
+        {
+          "id": 3,
+          "title": "Implement click-to-expand and full-screen video playback",
+          "description": "Add functionality to expand thumbnails into a full-screen or modal view with video playback controls when clicked.",
+          "dependencies": [
+            2
+          ],
+          "details": "Implementation steps:\n1. Create a VideoPlayer modal component that appears when a thumbnail is clicked\n2. Implement video playback with standard HTML5 video controls\n3. Add a close button and escape key functionality to exit full-screen mode\n4. Display complete project metadata in the expanded view (client, date, services provided)\n5. Add smooth transitions/animations for opening/closing the modal\n6. Implement autoplay when the video is expanded\n7. Add focus trapping within the modal for accessibility\n8. Ensure the video player is responsive in the expanded view\n\nTesting approach:\n- Verify videos play correctly when thumbnails are clicked\n- Test that controls work properly (play, pause, volume, etc.)\n- Ensure modal can be closed through various methods (button, escape key)\n- Check that focus management works correctly for accessibility\n- Test on different devices and browsers",
+          "status": "done",
+          "parentTaskId": 4
+        },
+        {
+          "id": 4,
+          "title": "Add category filtering and metadata display",
+          "description": "Implement filtering functionality to allow users to view portfolio items by category and ensure all metadata is properly displayed.",
+          "dependencies": [
+            2,
+            3
+          ],
+          "details": "Implementation steps:\n1. Create a filtering component with buttons/dropdown for different project categories\n2. Implement filter logic to show/hide thumbnails based on selected category\n3. Add animations for filtering transitions (e.g., fade in/out)\n4. Create a system to tag portfolio items with multiple categories\n5. Enhance metadata display in both thumbnail and expanded views\n6. Add sorting options (e.g., by date, client name)\n7. Implement URL parameters to allow direct linking to filtered views\n8. Add a counter showing the number of items in each category\n\nTesting approach:\n- Verify filtering correctly shows only items in the selected category\n- Test edge cases like no items in a category\n- Check that transitions are smooth when filtering\n- Ensure URL parameters correctly restore filter state\n- Test with a large number of portfolio items to ensure performance",
+          "status": "done",
+          "parentTaskId": 4
+        }
+      ]
     },
     {
       "id": 5,
