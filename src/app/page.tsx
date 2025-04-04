@@ -61,10 +61,13 @@ const ContentSection = styled.section`
 
 const DevLinks = styled.div`
   padding: 1rem;
-  background-color: #f8f9fa;
+  background-color: rgba(248, 249, 250, 0.8);
   text-align: center;
-  position: relative;
-  z-index: 10;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
   
   @media (max-width: 768px) {
     display: flex;
@@ -114,27 +117,27 @@ const videoTransitions = [
   {
     id: 'hero-section',
     startPosition: 0,
-    endPosition: 0.33,
-    videoSrc: '/videos/SAC%20Final%20Cut.mov',
-    posterSrc: '/images/hero-poster.jpg',
+    endPosition: 0.3,
+    videoSrc: '/videos/lapis_demo.mp4',
+    posterSrc: '/images/portfolio/hero-poster.jpg',
     title: 'Captivating Visual Stories That Inspire',
     subtitle: 'LAPIS creates immersive visual experiences that blend artistry with powerful storytelling'
   },
   {
     id: 'commercial-section',
-    startPosition: 0.33,
-    endPosition: 0.66,
-    videoSrc: '/videos/SAC%20Final%20Cut.mov',
-    posterSrc: '/images/commercial-poster.jpg',
+    startPosition: 0.301,
+    endPosition: 0.6,
+    videoSrc: '/videos/lapis_demo.mp4',
+    posterSrc: '/images/portfolio/commercial-poster.jpg',
     title: 'Commercial Productions',
     subtitle: 'High-impact video content that drives engagement and elevates your brand'
   },
   {
     id: 'documentary-section',
-    startPosition: 0.66,
+    startPosition: 0.601,
     endPosition: 1,
-    videoSrc: '/videos/SAC%20Final%20Cut.mov',
-    posterSrc: '/images/documentary-poster.jpg',
+    videoSrc: '/videos/lapis_demo.mp4',
+    posterSrc: '/images/portfolio/documentary-poster.jpg',
     title: 'Documentary Storytelling',
     subtitle: 'Authentic narratives that connect with audiences on a deeper level'
   }
@@ -148,6 +151,8 @@ export default function Home() {
   const [isTablet, setIsTablet] = useState(false);
   
   useEffect(() => {
+    console.log('Home component mounted, video transitions:', videoTransitions);
+    
     // Ensure IntersectionObserver polyfill is loaded
     if (!('IntersectionObserver' in window)) {
       import('intersection-observer');
@@ -192,7 +197,7 @@ export default function Home() {
   return (
     <>
       <Header />
-      <Main ref={mainRef}>
+      <Main ref={mainRef} style={{ position: 'relative' }}>
         {/* Development links - remove before production */}
         <DevLinks>
           <DevLink href="/scroll-test">
@@ -209,9 +214,9 @@ export default function Home() {
         {/* Scroll Video Controller for the hero and video sections */}
         <ScrollVideoController 
           transitions={videoTransitions}
-          preloadAll={false}
-          optimizeForMobile={true}
-          metadataOnly={isMobile || isTablet}
+          preloadAll={true}
+          optimizeForMobile={false}
+          metadataOnly={false}
         />
         
         {/* Content sections start after the video scroll sections */}
@@ -220,20 +225,20 @@ export default function Home() {
             <SectionTitle>Our Work</SectionTitle>
             <VideoSection 
               title="Commercial Productions" 
-              videoSrc="/videos/SAC%20Final%20Cut.mov" 
+              videoSrc="/videos/lapis_demo.mp4" 
               description="High-impact commercial video production that captures attention and drives engagement."
             />
             
             <VideoSection 
               title="Documentary" 
-              videoSrc="/videos/SAC%20Final%20Cut.mov" 
+              videoSrc="/videos/lapis_demo.mp4" 
               description="Authentic storytelling that connects with audiences through compelling narratives."
               reverse
             />
             
             <VideoSection 
               title="Event Coverage" 
-              videoSrc="/videos/SAC%20Final%20Cut.mov" 
+              videoSrc="/videos/lapis_demo.mp4" 
               description="Dynamic event documentation that preserves the energy and highlights of your special moments."
             />
           

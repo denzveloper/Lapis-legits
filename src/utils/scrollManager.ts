@@ -121,6 +121,11 @@ class ScrollManager {
     const maxScroll = this.documentHeight - this.viewportHeight;
     const scrollProgress = maxScroll > 0 ? this.scrollY / maxScroll : 0;
     
+    // Debug output to check scroll progress
+    if (this.scrollY % 100 < 10) { // Log only occasionally to avoid console spam
+      console.log(`Scroll progress: ${scrollProgress.toFixed(3)}, scrollY: ${this.scrollY}, maxScroll: ${maxScroll}`);
+    }
+    
     // Check each trigger
     this.triggers.forEach(trigger => {
       // If scroll position is within the trigger range

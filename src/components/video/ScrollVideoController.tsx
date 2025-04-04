@@ -29,8 +29,9 @@ const VideoContainer = styled.div`
   left: 0;
   width: 100%;
   height: 100vh;
-  z-index: -1;
+  z-index: 5;
   overflow: hidden;
+  background-color: #000000;
 `;
 
 const VideoOverlay = styled.div`
@@ -61,6 +62,10 @@ const VideoElement = styled.video`
   width: 100%;
   height: 100%;
   object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
   
   @media (max-width: 768px) {
     object-position: center center;
@@ -206,6 +211,8 @@ const ScrollVideoController: React.FC<ScrollVideoControllerProps> = ({
   
   // Pre-load videos strategically
   useEffect(() => {
+    console.log('Setting up video preloading:', transitions);
+    
     // Define which videos to preload
     let videosToPreload = [];
     
@@ -217,6 +224,7 @@ const ScrollVideoController: React.FC<ScrollVideoControllerProps> = ({
           priority: transitions.length - index, // Higher priority for earlier videos
           metadataOnly: metadataOnly || (optimizeForMobile && isMobile),
           onProgress: (progress: number) => {
+            console.log(`Video ${index} loading progress:`, progress);
             setLoadingProgress(prev => {
               const newProgress = [...prev];
               newProgress[index] = progress;
@@ -290,7 +298,10 @@ const ScrollVideoController: React.FC<ScrollVideoControllerProps> = ({
   
   // Handle video loading
   useEffect(() => {
+    console.log('Setting up video loading handlers');
+    
     const handleVideoLoaded = (index: number) => {
+      console.log(`Video ${index} loaded successfully`);
       setVideosLoaded(prev => {
         const updated = [...prev];
         updated[index] = true;
@@ -298,6 +309,7 @@ const ScrollVideoController: React.FC<ScrollVideoControllerProps> = ({
       });
       
       if (index === activeIndex && videoRefs.current[index]) {
+        console.log(`Playing video ${index}`);
         videoRefs.current[index]?.play().catch(e => console.error("Error playing video:", e));
       }
     };
@@ -343,6 +355,12 @@ const ScrollVideoController: React.FC<ScrollVideoControllerProps> = ({
     }
   };
   
+  // Debug current active transition
+  useEffect(() => {
+    console.log(`Active transition changed to: ${activeIndex}`);
+    console.log(`Current transition:`, transitions[activeIndex]);
+  }, [activeIndex, transitions]);
+  
   // Set up scroll triggers for each transition
   transitions.forEach((transition, index) => {
     useScrollTrigger(
@@ -350,8 +368,9 @@ const ScrollVideoController: React.FC<ScrollVideoControllerProps> = ({
       transition.startPosition,
       transition.endPosition,
       (progress) => {
-        // If we're at the beginning of a transition and it's not the active one
-        if (progress < 0.1 && activeIndex !== index) {
+        // Always set the active index when we're within this transition's range
+        if (activeIndex !== index) {
+          console.log(`Transition activated: ${index}, progress: ${progress}`);
           setActiveIndex(index);
           
           // Start preloading the next videos if they haven't been preloaded yet
@@ -414,22 +433,24 @@ const ScrollVideoController: React.FC<ScrollVideoControllerProps> = ({
           const videoSrc = transition.videoSrc;
           const isActive = activeIndex === index;
           const loadProgress = loadingProgress[index];
-          const isPosterVisible = transition.posterSrc && (loadProgress < 1 || !videosLoaded[index]);
+          const isPosterVisible = transition.posterSrc && (!videosLoaded[index] || loadProgress < 1);
           
           return (
-            <div key={transition.id} style={{ display: isActive ? 'block' : 'none', position: 'relative' }}>
+            <div key={transition.id} style={{ display: isActive ? 'block' : 'none', position: 'relative', width: '100%', height: '100%' }}>
               {/* Poster image shown until video is loaded */}
               {isPosterVisible && (
                 <PosterImage 
                   src={transition.posterSrc}
                   alt=""
-                  loading="lazy"
+                  loading="eager"
                   style={{ opacity: videosLoaded[index] ? 0 : 1 }}
+                  onLoad={() => console.log(`Poster ${index} loaded`)}
+                  onError={(e) => console.error(`Poster ${index} error:`, e)}
                 />
               )}
               
               {/* Loading progress indicator */}
-              {isActive && loadProgress < 1 && !videosLoaded[index] && (
+              {isActive && loadProgress < 1 && (
                 <LoadingOverlay>
                   <ProgressBar $progress={loadProgress} />
                 </LoadingOverlay>
@@ -441,11 +462,16 @@ const ScrollVideoController: React.FC<ScrollVideoControllerProps> = ({
                 loop
                 muted
                 playsInline
+                autoPlay={isActive}
                 poster={transition.posterSrc}
                 style={{ 
-                  opacity: isActive ? opacity : 0
+                  opacity: isActive ? opacity : 0,
+                  display: isActive ? 'block' : 'none'
                 }}
-                preload={preloadAll || index === activeIndex || index === activeIndex + 1 ? "auto" : "none"}
+                preload="auto"
+                onError={(e) => console.error(`Video ${index} error:`, e)}
+                onLoadStart={() => console.log(`Video ${index} load started`)}
+                onLoadedData={() => console.log(`Video ${index} data loaded`)}
               />
             </div>
           );

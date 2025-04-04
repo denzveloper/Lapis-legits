@@ -168,6 +168,12 @@ export default function VideoSection({
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isVideoMounted, setIsVideoMounted] = useState(false);
+  const [videoError, setVideoError] = useState<string | null>(null);
+  
+  // Debug video source
+  useEffect(() => {
+    console.log(`VideoSection for ${title}, videoSrc: ${videoSrc}`);
+  }, [title, videoSrc]);
   
   // Check if device is mobile
   useEffect(() => {
@@ -255,53 +261,30 @@ export default function VideoSection({
     };
   }, [videoSrc, isMobile, isVideoMounted, isVideoLoaded]);
   
+  // Handle video errors
+  const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+    console.error(`Error loading video for ${title}:`, e);
+    setVideoError(`Could not load video (${videoSrc})`);
+  };
+  
   // Handle video loaded event
   const handleVideoLoaded = () => {
+    console.log(`Video loaded for ${title}`);
     setIsVideoLoaded(true);
+    
+    // Auto-play if in view
+    if (isInView && videoRef.current) {
+      videoRef.current.play().catch(err => {
+        console.error("Error playing video after load:", err);
+      });
+    }
   };
   
   return (
     <SectionContainer ref={sectionRef} $reverse={reverse && !isMobile}>
-      <motion.div
-        style={{ opacity, scale }}
-        initial={{ x: reverse && !isMobile ? 50 : -50, opacity: 0 }}
-        whileInView={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        viewport={{ once: true, margin: "-100px" }}
-      >
-        <VideoContainer>
-          {!isVideoMounted && posterSrc && (
-            <PosterImage 
-              src={posterSrc} 
-              alt={title} 
-              loading="lazy"
-              decoding="async"
-            />
-          )}
-          
-          {!isVideoMounted && !posterSrc && (
-            <LoadingPlaceholder>
-              {/* Empty placeholder until video loads */}
-            </LoadingPlaceholder>
-          )}
-          
-          {isVideoMounted && (
-            <VideoElement
-              ref={videoRef}
-              muted
-              loop
-              playsInline
-              src={videoSrc}
-              poster={posterSrc}
-              onLoadedData={handleVideoLoaded}
-              preload={isMobile ? "metadata" : "auto"}
-            />
-          )}
-        </VideoContainer>
-      </motion.div>
-      
       <ContentContainer>
         <motion.div
+          style={{ opacity, scale }}
           initial={{ x: reverse && !isMobile ? -50 : 50, opacity: 0 }}
           whileInView={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
@@ -312,6 +295,51 @@ export default function VideoSection({
           <Button href="#">View Project</Button>
         </motion.div>
       </ContentContainer>
+      
+      <motion.div 
+        style={{ opacity, scale }}
+        initial={{ x: reverse && !isMobile ? 50 : -50, opacity: 0 }}
+        whileInView={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true, margin: "-100px" }}
+      >
+        <VideoContainer>
+          {!isVideoLoaded && !videoError && (
+            <LoadingPlaceholder>
+              <span>Loading...</span>
+            </LoadingPlaceholder>
+          )}
+          
+          {videoError && (
+            <LoadingPlaceholder>
+              <span>{videoError}</span>
+            </LoadingPlaceholder>
+          )}
+          
+          {posterSrc && !isVideoLoaded && (
+            <PosterImage 
+              src={posterSrc} 
+              alt={`${title} poster`} 
+              loading="lazy"
+              decoding="async"
+            />
+          )}
+          
+          {isVideoMounted && (
+            <VideoElement
+              ref={videoRef}
+              src={videoSrc}
+              playsInline
+              muted
+              loop
+              onLoadedData={handleVideoLoaded}
+              onError={handleVideoError}
+              poster={posterSrc}
+              preload={isMobile ? "metadata" : "auto"}
+            />
+          )}
+        </VideoContainer>
+      </motion.div>
     </SectionContainer>
   );
 }
