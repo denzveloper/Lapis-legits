@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
-import IntersectionDebugger from '../debug/IntersectionDebugger';
 
 // Type definitions
 interface SnapScrollContainerProps {
@@ -80,6 +79,23 @@ const NavigationBullets = styled.div`
   }
 `;
 
+// Progress indicator that fills as user scrolls
+const ProgressIndicator = styled.div<{ progress: number }>`
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  width: 2px;
+  height: ${props => props.progress * 100}%;
+  background-color: white;
+  transform: translateX(-50%);
+  z-index: 1;
+  transition: height 0.3s ease;
+  
+  @media (max-width: 768px) {
+    top: -20px;
+  }
+`;
+
 const BulletWrapper = styled.div`
   position: relative;
   display: flex;
@@ -96,6 +112,36 @@ const BulletWrapper = styled.div`
       transition-delay: 0ms;
     }
   `)}
+`;
+
+const BulletLabel = styled.span`
+  position: absolute;
+  right: calc(100% + 10px);
+  white-space: nowrap;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  opacity: 0;
+  transform: translateX(10px);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+  
+  &:after {
+    content: '';
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-left: 6px solid rgba(0, 0, 0, 0.7);
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+  }
+  
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 const Bullet = styled.button<{ isActive: boolean }>`
@@ -128,36 +174,6 @@ const Bullet = styled.button<{ isActive: boolean }>`
   @media (max-width: 768px) {
     width: ${props => props.isActive ? '12px' : '8px'};
     height: ${props => props.isActive ? '12px' : '8px'};
-  }
-`;
-
-const BulletLabel = styled.span`
-  position: absolute;
-  right: calc(100% + 10px);
-  white-space: nowrap;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 0.3rem 0.8rem;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  opacity: 0;
-  transform: translateX(10px);
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  pointer-events: none;
-  
-  &:after {
-    content: '';
-    position: absolute;
-    right: -6px;
-    top: 50%;
-    transform: translateY(-50%);
-    border-left: 6px solid rgba(0, 0, 0, 0.7);
-    border-top: 6px solid transparent;
-    border-bottom: 6px solid transparent;
-  }
-  
-  @media (max-width: 768px) {
-    display: none;
   }
 `;
 
@@ -200,21 +216,35 @@ const ProgressDot = styled.div<{ isActive: boolean }>`
   transform: ${props => props.isActive ? 'scale(1.2)' : 'scale(1)'};
 `;
 
-// Progress indicator that fills as user scrolls
-const ProgressIndicator = styled.div<{ progress: number }>`
+// Enhanced touch area for better mobile experience
+const TouchArea = styled.div`
   position: absolute;
-  top: -30px;
-  left: 50%;
-  width: 2px;
-  height: ${props => props.progress * 100}%;
-  background-color: white;
-  transform: translateX(-50%);
-  z-index: 1;
-  transition: height 0.3s ease;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px; // Larger touch target (minimum 44px for iOS)
+  height: 44px;
+  right: -15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  z-index: 2;
+  cursor: pointer;
   
-  @media (max-width: 768px) {
-    top: -20px;
+  &:active {
+    background-color: rgba(255, 255, 255, 0.1);
   }
+`;
+
+// Ripple animation for feedback on bullet click
+const Ripple = styled(motion.div)`
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  z-index: 1;
+  pointer-events: none;
 `;
 
 const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({ 
@@ -227,6 +257,9 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
   const [activeSection, setActiveSection] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [sectionVisibility, setSectionVisibility] = useState<number[]>([]);
+  const [showRipple, setShowRipple] = useState<number | null>(null);
+  const [lastInteraction, setLastInteraction] = useState<'scroll' | 'click'>('scroll');
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
   
   // Initialize section refs array and visibility tracking
   useEffect(() => {
@@ -243,6 +276,9 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
     
     const observer = new IntersectionObserver(
       (entries) => {
+        // Only process if last interaction was scroll (not click)
+        if (lastInteraction === 'click') return;
+        
         // Update visibility ratios for each section
         const newVisibility = [...sectionVisibility];
         
@@ -307,7 +343,7 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
         }
       });
     };
-  }, [activeSection, onSectionChange, sectionVisibility]);
+  }, [activeSection, lastInteraction, onSectionChange, sectionVisibility]);
   
   // Apply transition effect to bullets
   const applyBulletTransition = (newIndex: number) => {
@@ -320,30 +356,36 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
     });
   };
   
-  // Handle navigation bullet click - with debounce to prevent rapid clicking
+  // Handle navigation bullet click with visual feedback
   const scrollToSection = (index: number) => {
     if (sectionRefs.current[index]) {
+      // Set last interaction type to click
+      setLastInteraction('click');
+      
+      // Show ripple effect on clicked bullet
+      setShowRipple(index);
+      setTimeout(() => setShowRipple(null), 600);
+      
       // Apply transition effect when changing sections via click
       applyBulletTransition(index);
       
-      // Disable existing observers temporarily to prevent conflicts
-      // between programmatic scrolling and Intersection Observer
-      const disableObserversTemporarily = async () => {
-        // Set active section immediately for UI feedback
-        setActiveSection(index);
-        
-        // Call the callback if provided
-        if (onSectionChange) {
-          onSectionChange(index);
-        }
-        
-        // Schedule the scroll
-        setTimeout(() => {
-          sectionRefs.current[index]?.scrollIntoView({ behavior: 'smooth' });
-        }, 10);
-      };
+      // Set active section immediately for UI feedback
+      setActiveSection(index);
       
-      disableObserversTemporarily();
+      // Call the callback if provided
+      if (onSectionChange) {
+        onSectionChange(index);
+      }
+      
+      // Schedule the scroll
+      setTimeout(() => {
+        sectionRefs.current[index]?.scrollIntoView({ behavior: 'smooth' });
+        
+        // Reset interaction type after scrolling completes
+        setTimeout(() => {
+          setLastInteraction('scroll');
+        }, 1000);
+      }, 10);
     }
   };
   
@@ -405,14 +447,38 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
     };
   }, [activeSection, sections.length]);
   
-  // Debug output for visibility values (can be removed in production)
-  useEffect(() => {
-    console.log('Section visibility:', sectionVisibility);
-  }, [sectionVisibility]);
+  // Handle touch gestures for swipe navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartY(e.touches[0].clientY);
+  };
+  
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartY === null) return;
+    
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaY = touchEndY - touchStartY;
+    
+    // Detect swipe direction
+    if (Math.abs(deltaY) > 50) { // Minimum swipe distance
+      if (deltaY > 0 && activeSection > 0) {
+        // Swipe down -> previous section
+        scrollToSection(activeSection - 1);
+      } else if (deltaY < 0 && activeSection < sections.length - 1) {
+        // Swipe up -> next section
+        scrollToSection(activeSection + 1);
+      }
+    }
+    
+    setTouchStartY(null);
+  };
   
   return (
     <>
-      <Container ref={containerRef}>
+      <Container 
+        ref={containerRef}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {React.Children.map(children, (child, index) => (
           <Section
             ref={(el) => { sectionRefs.current[index] = el; }}
@@ -424,26 +490,61 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
       </Container>
       
       {/* Navigation bullets */}
-      <NavigationBullets aria-label="Section Navigation">
+      <NavigationBullets aria-label="Section Navigation" role="navigation">
         <ProgressIndicator progress={scrollProgress} aria-hidden="true" />
         {sections.map((section, index) => (
           <BulletWrapper key={section.id}>
             <BulletLabel className="bullet-label">
               {section.title || `Section ${index + 1}`}
             </BulletLabel>
+            
+            {/* Enhanced click target for better touch experience */}
+            <TouchArea 
+              onClick={() => scrollToSection(index)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  scrollToSection(index);
+                }
+              }}
+              tabIndex={-1}
+              aria-hidden="true"
+            />
+            
+            {/* Visual feedback with ripple animation */}
+            {showRipple === index && (
+              <Ripple
+                initial={{ scale: 0, opacity: 1 }}
+                animate={{ scale: 1, opacity: 0 }}
+                transition={{ duration: 0.6 }}
+              />
+            )}
+            
             <Bullet
               className="nav-bullet"
               isActive={activeSection === index}
               onClick={() => scrollToSection(index)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  scrollToSection(index);
+                }
+              }}
               aria-label={`Navigate to ${section.title || `section ${index + 1}`}`}
               aria-current={activeSection === index ? 'true' : 'false'}
+              role="button"
+              tabIndex={0}
             />
           </BulletWrapper>
         ))}
       </NavigationBullets>
       
       {/* Section indicator at bottom */}
-      <SectionIndicator active={activeSection} total={sections.length}>
+      <SectionIndicator 
+        active={activeSection} 
+        total={sections.length}
+        aria-hidden="true"
+      >
         <ProgressDots>
           {sections.map((_, index) => (
             <ProgressDot 
@@ -454,13 +555,6 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
           ))}
         </ProgressDots>
       </SectionIndicator>
-      
-      {/* Debug Intersection Observer in development mode */}
-      <IntersectionDebugger 
-        visibility={sectionVisibility}
-        activeIndex={activeSection}
-        totalSections={sections.length}
-      />
     </>
   );
 };

@@ -1,111 +1,45 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import Link from 'next/link';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import SnapScrollVideoSection from '@/components/video/SnapScrollVideoSection';
+import SnapScrollContainer from '../../components/video/SnapScrollContainer';
+import SnapScrollVideoSection, { VideoSection } from '../../components/video/SnapScrollVideoSection';
+import { IntersectionDebugger } from '../../components/debug';
 
-const Main = styled.main`
-  width: 100%;
-  min-height: 100vh;
-  background-color: var(--color-background);
-  color: var(--color-text);
-`;
-
-const ContentSection = styled.section`
-  padding: var(--spacing-xl) 0;
+// Styled components
+const PageContainer = styled.div`
   position: relative;
-  background-color: var(--color-background-dark);
-  color: var(--color-text-light);
-  
-  @media (max-width: 768px) {
-    padding: var(--spacing-lg) 0;
-  }
-  
-  @media (max-width: 480px) {
-    padding: var(--spacing-md) 0;
-  }
-`;
-
-const DevBar = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
   width: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  height: 100vh;
+  overflow: hidden;
+  background-color: #000;
   color: white;
-  display: flex;
-  justify-content: space-between;
-  padding: 0.5rem 1rem;
-  z-index: 100;
 `;
 
-const BackLink = styled(Link)`
-  color: white;
-  text-decoration: none;
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  background-color: rgba(0, 0, 0, 0.5);
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
-  
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.8);
-  }
-`;
-
-const ResponsiveContainer = styled.div`
-  width: 100%;
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 0 var(--spacing-lg);
-  
-  @media (max-width: 768px) {
-    padding: 0 var(--spacing-md);
-  }
-  
-  @media (max-width: 480px) {
-    padding: 0 var(--spacing-sm);
-  }
-`;
-
-const SectionTitle = styled.h2`
-  font-size: var(--font-size-xlarge);
-  margin-bottom: var(--spacing-lg);
-  text-align: center;
-  
-  @media (max-width: 768px) {
-    font-size: var(--font-size-large);
-    margin-bottom: var(--spacing-md);
-  }
-`;
-
-const CurrentSectionHeading = styled.h1`
+const CurrentSectionHeading = styled.div`
   position: fixed;
-  top: 80px;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.5);
+  font-size: 1.5rem;
+  font-weight: bold;
+  background-color: rgba(0, 0, 0, 0.7);
   color: white;
   padding: 0.5rem 1.5rem;
   border-radius: 30px;
-  font-size: 1.2rem;
-  z-index: 90;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  white-space: nowrap;
+  z-index: 100;
+  transition: opacity 0.3s ease, transform 0.3s ease;
   
   @media (max-width: 768px) {
     font-size: 1rem;
     padding: 0.4rem 1rem;
-    top: 60px;
   }
 `;
 
+// Animated scroll indicator with bounce effect
 const ScrollIndicator = styled.div`
   position: fixed;
-  bottom: 5rem;
+  bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -113,142 +47,166 @@ const ScrollIndicator = styled.div`
   align-items: center;
   color: white;
   font-size: 0.9rem;
-  opacity: 0.8;
-  z-index: 90;
-  pointer-events: none;
-  animation: bounce 2s infinite;
+  z-index: 100;
   
   @keyframes bounce {
     0%, 20%, 50%, 80%, 100% {
-      transform: translateX(-50%) translateY(0);
+      transform: translateY(0);
     }
     40% {
-      transform: translateX(-50%) translateY(-10px);
+      transform: translateY(-10px);
     }
     60% {
-      transform: translateX(-50%) translateY(-5px);
+      transform: translateY(-5px);
     }
   }
   
   svg {
-    width: 24px;
-    height: 24px;
     margin-top: 8px;
+    animation: bounce 2s infinite;
   }
 `;
 
-// Define video sections for the snap scrolling
-const videoSections = [
+// Demo data: Video sections
+const videoSections: VideoSection[] = [
   {
-    id: 'hero-section',
-    videoSrc: '/videos/lapis_demo.mp4',
-    posterSrc: '/images/portfolio/hero-poster.jpg',
-    title: 'Captivating Visual Stories That Inspire',
-    subtitle: 'LAPIS creates immersive visual experiences that blend artistry with powerful storytelling'
+    id: 'intro',
+    title: 'Welcome to Snap Scroll',
+    subtitle: 'Scroll down or click a navigation bullet to explore our enhanced snap scroll experience',
+    videoSrc: { 
+      src: 'https://assets.mixkit.co/videos/preview/mixkit-white-sand-beach-and-palm-trees-1564-large.mp4',
+      type: 'video/mp4'
+    },
+    textPosition: 'center',
+    textColor: 'white',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)'
   },
   {
-    id: 'commercial-section',
-    videoSrc: '/videos/lapis_demo.mp4',
-    posterSrc: '/images/portfolio/commercial-poster.jpg',
-    title: 'Commercial Productions',
-    subtitle: 'High-impact video content that drives engagement and elevates your brand'
+    id: 'feature-1',
+    title: 'Smooth Transitions',
+    subtitle: 'Enjoy perfectly timed video transitions with our enhanced intersection observer',
+    videoSrc: { 
+      src: 'https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4',
+      type: 'video/mp4'
+    },
+    textPosition: 'left',
+    textColor: 'white',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)'
   },
   {
-    id: 'documentary-section',
-    videoSrc: '/videos/lapis_demo.mp4',
-    posterSrc: '/images/portfolio/documentary-poster.jpg',
-    title: 'Documentary Storytelling',
-    subtitle: 'Authentic narratives that connect with audiences on a deeper level'
+    id: 'feature-2',
+    title: 'Click Navigation',
+    subtitle: 'Try clicking directly on the navigation bullets to jump to any section',
+    videoSrc: { 
+      src: 'https://assets.mixkit.co/videos/preview/mixkit-clouds-and-blue-sky-2408-large.mp4',
+      type: 'video/mp4'
+    },
+    textPosition: 'right',
+    textColor: 'white',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)'
+  },
+  {
+    id: 'feature-3',
+    title: 'Accessibility',
+    subtitle: 'Fully accessible with keyboard navigation support, screen reader optimizations, and semantic markup',
+    videoSrc: { 
+      src: 'https://assets.mixkit.co/videos/preview/mixkit-woman-running-above-the-camera-on-a-running-track-32807-large.mp4',
+      type: 'video/mp4'
+    },
+    textPosition: 'left',
+    textColor: 'white',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)'
+  },
+  {
+    id: 'conclusion',
+    title: 'Get Started Today',
+    subtitle: 'Add immersive, smooth scrolling experiences to your website with our snap scroll component',
+    videoSrc: { 
+      src: 'https://assets.mixkit.co/videos/preview/mixkit-top-aerial-shot-of-seashore-with-rocks-1090-large.mp4',
+      type: 'video/mp4'
+    },
+    textPosition: 'center',
+    textColor: 'white',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)'
   }
 ];
 
 export default function SnapScrollExample() {
-  const contentSectionRef = useRef<HTMLElement>(null);
-  const [currentSection, setCurrentSection] = useState(0);
-  const [headingText, setHeadingText] = useState('');
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [currentSectionTitle, setCurrentSectionTitle] = useState('');
+  const [sectionVisibility, setSectionVisibility] = useState<number[]>(new Array(videoSections.length).fill(0));
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
   
+  // Update current section heading when the active section changes
   useEffect(() => {
-    // Update heading text when the section changes
-    if (videoSections[currentSection]) {
-      setHeadingText(videoSections[currentSection].title || `Section ${currentSection + 1}`);
-    }
+    // Update heading text
+    setCurrentSectionTitle(videoSections[activeIndex]?.title || '');
     
-    // Hide scroll indicator after the first section change
-    if (currentSection > 0) {
+    // Hide the scroll indicator after the first change
+    if (activeIndex > 0) {
       setShowScrollIndicator(false);
     }
     
-    // Show scroll indicator again when reaching the last section
-    if (currentSection === videoSections.length - 1) {
-      // Show scroll indicator with text prompting to scroll to content
+    // Show scroll indicator again when reaching the last section, with different text
+    if (activeIndex === videoSections.length - 1) {
       setTimeout(() => {
         setShowScrollIndicator(true);
-      }, 2000);
+      }, 1000);
     }
-  }, [currentSection]);
-  
-  // Scroll to content section
-  const scrollToContent = () => {
-    if (contentSectionRef.current) {
-      contentSectionRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  }, [activeIndex]);
   
   // Handle section change
   const handleSectionChange = (index: number) => {
-    console.log(`Section changed to ${index}`);
-    setCurrentSection(index);
+    setActiveIndex(index);
     
-    // If we've reached the last video section, prepare to scroll to content
-    if (index === videoSections.length - 1) {
-      console.log('Last section reached, prepare for content scroll');
-    }
+    // Update section visibility for debugging (normally this would come from SnapScrollContainer)
+    const newVisibility = Array(videoSections.length).fill(0);
+    newVisibility[index] = 1; // Set current section to 100% visible
+    setSectionVisibility(newVisibility);
   };
   
   return (
-    <>
-      <Header />
-      <DevBar>
-        <BackLink href="/">Back to Home</BackLink>
-        <span>Current Section: {currentSection + 1} of {videoSections.length}</span>
-      </DevBar>
-      
+    <PageContainer>
+      {/* Current section title */}
       <CurrentSectionHeading>
-        {headingText}
+        {currentSectionTitle}
       </CurrentSectionHeading>
       
-      {/* Scroll indicator */}
+      {/* Scroll indicator (only shown at beginning and end) */}
       {showScrollIndicator && (
         <ScrollIndicator>
-          <span>{currentSection === videoSections.length - 1 ? 'Scroll to content' : 'Scroll to navigate'}</span>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
-            <path d="M12 2a10 10 0 0110 10 10 10 0 01-10 10A10 10 0 012 12 10 10 0 0112 2m0 15l5-5h-3V8h-4v4H7l5 5z" />
+          {activeIndex === 0 ? 'Scroll to explore' : 'Scroll to content'}
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 17L12 7" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M7 12L12 17L17 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </ScrollIndicator>
       )}
       
-      <Main>
-        {/* Video Sections with Snap Scrolling */}
-        <SnapScrollVideoSection 
-          sections={videoSections}
-          preloadAll={true}
-          onSectionChange={handleSectionChange}
-        />
-        
-        {/* Content Section */}
-        <ContentSection ref={contentSectionRef}>
-          <ResponsiveContainer>
-            <SectionTitle>Continue Exploring Our Work</SectionTitle>
-            <p>
-              This section demonstrates how the content flows after the snap-scrolling
-              video sections. The transition is smooth and intuitive for users.
-            </p>
-          </ResponsiveContainer>
-        </ContentSection>
-      </Main>
+      <SnapScrollContainer
+        sections={videoSections.map(section => ({
+          id: section.id,
+          title: section.title,
+          subtitle: section.subtitle
+        }))}
+        onSectionChange={handleSectionChange}
+      >
+        {videoSections.map((section, index) => (
+          <SnapScrollVideoSection
+            key={section.id}
+            sections={[section]}
+            activeIndex={0}
+            preloadNext={index < videoSections.length - 1}
+          />
+        ))}
+      </SnapScrollContainer>
       
-      <Footer />
-    </>
+      {/* Debug visualization for development */}
+      <IntersectionDebugger 
+        visibility={sectionVisibility}
+        activeIndex={activeIndex}
+        totalSections={videoSections.length}
+      />
+    </PageContainer>
   );
 } 
