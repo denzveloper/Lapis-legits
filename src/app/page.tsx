@@ -200,6 +200,9 @@ export default function Home() {
       <Main ref={mainRef} style={{ position: 'relative' }}>
         {/* Development links - remove before production */}
         <DevLinks>
+          <DevLink href="/snap-scroll-example">
+            View Snap Scroll Example Page
+          </DevLink>
           <DevLink href="/scroll-test">
             View Scroll Video Hook Test Page
           </DevLink>
