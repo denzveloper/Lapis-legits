@@ -89,10 +89,10 @@ interface ScrollVideoPlayerProps {
 }
 
 // Styled Components
-const VideoContainer = styled.div<{ aspectRatio: string }>`
+const VideoContainer = styled.div<{ $aspectRatio: string }>`
   position: relative;
   width: 100%;
-  aspect-ratio: ${props => props.aspectRatio};
+  aspect-ratio: ${props => props.$aspectRatio};
   overflow: hidden;
   background-color: #000;
   border-radius: 4px;
@@ -104,7 +104,7 @@ const VideoElement = styled.video`
   object-fit: cover;
 `;
 
-const ControlsOverlay = styled.div<{ isVisible: boolean }>`
+const ControlsOverlay = styled.div<{ $isVisible: boolean }>`
   position: absolute;
   bottom: 0;
   left: 0;
@@ -114,7 +114,7 @@ const ControlsOverlay = styled.div<{ isVisible: boolean }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  opacity: ${props => (props.isVisible ? '1' : '0')};
+  opacity: ${props => (props.$isVisible ? '1' : '0')};
   transition: opacity 0.3s ease;
 `;
 
@@ -157,12 +157,12 @@ const ErrorDisplay = styled.div`
   padding: 20px;
 `;
 
-const ScrollProgressIndicator = styled.div<{ progress: number }>`
+const ScrollProgressIndicator = styled.div<{ $progress: number }>`
   position: absolute;
   bottom: 0;
   left: 0;
   height: 3px;
-  width: ${props => props.progress * 100}%;
+  width: ${props => props.$progress * 100}%;
   background-color: #3498db;
   transition: width 0.1s ease;
 `;
@@ -353,7 +353,7 @@ const ScrollVideoPlayer: React.FC<ScrollVideoPlayerProps> = ({
   return (
     <VideoContainer 
       ref={containerRef}
-      aspectRatio={aspectRatio}
+      $aspectRatio={aspectRatio}
       className={className}
       style={style}
       onMouseEnter={handleMouseEnter}
@@ -429,7 +429,7 @@ const ScrollVideoPlayer: React.FC<ScrollVideoPlayerProps> = ({
       )}
       
       {/* Controls overlay */}
-      <ControlsOverlay isVisible={showControls}>
+      <ControlsOverlay $isVisible={showControls}>
         <ControlButton onClick={toggleMute} aria-label={isMuted ? "Unmute" : "Mute"}>
           {isMuted ? <UnmuteIcon /> : <MuteIcon />}
         </ControlButton>
@@ -441,7 +441,7 @@ const ScrollVideoPlayer: React.FC<ScrollVideoPlayerProps> = ({
       </ControlsOverlay>
       
       {/* Scroll progress indicator */}
-      <ScrollProgressIndicator progress={scrollState.scrollProgress} />
+      <ScrollProgressIndicator $progress={scrollState.scrollProgress} />
     </VideoContainer>
   );
 };

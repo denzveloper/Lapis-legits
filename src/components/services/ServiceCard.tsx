@@ -12,11 +12,11 @@ interface ServiceCardProps {
   isActive: boolean;
 }
 
-const Card = styled(motion.div)<{ isActive: boolean }>`
+const Card = styled(motion.div)<{ $isActive: boolean }>`
   position: relative;
   border-radius: 12px;
   overflow: hidden;
-  background-color: ${props => props.isActive ? 'var(--color-background-light)' : 'var(--color-background)'};
+  background-color: ${props => props.$isActive ? 'var(--color-background-light)' : 'var(--color-background)'};
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   aspect-ratio: 16/9;
   cursor: pointer;
@@ -133,7 +133,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, index, onClick, isAc
       whileHover="hover"
       whileTap="tap"
       custom={index}
-      isActive={isActive}
+      $isActive={isActive}
       onClick={() => onClick(service)}
       aria-label={`Service: ${service.title}`}
     >

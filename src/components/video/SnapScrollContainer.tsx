@@ -80,12 +80,12 @@ const NavigationBullets = styled.div`
 `;
 
 // Progress indicator that fills as user scrolls
-const ProgressIndicator = styled.div<{ progress: number }>`
+const ProgressIndicator = styled.div<{ $progress: number }>`
   position: absolute;
   top: -30px;
   left: 50%;
   width: 2px;
-  height: ${props => props.progress * 100}%;
+  height: ${props => props.$progress * 100}%;
   background-color: white;
   transform: translateX(-50%);
   z-index: 1;
@@ -144,16 +144,16 @@ const BulletLabel = styled.span`
   }
 `;
 
-const Bullet = styled.button<{ isActive: boolean }>`
-  width: ${props => props.isActive ? '14px' : '10px'};
-  height: ${props => props.isActive ? '14px' : '10px'};
+const Bullet = styled.button<{ $isActive: boolean }>`
+  width: ${props => props.$isActive ? '14px' : '10px'};
+  height: ${props => props.$isActive ? '14px' : '10px'};
   border-radius: 50%;
-  background-color: ${props => props.isActive ? 'white' : 'rgba(255, 255, 255, 0.4)'};
-  border: ${props => props.isActive ? '2px solid rgba(255, 255, 255, 0.8)' : 'none'};
-  box-shadow: ${props => props.isActive ? '0 0 8px rgba(255, 255, 255, 0.5)' : 'none'};
+  background-color: ${props => props.$isActive ? 'white' : 'rgba(255, 255, 255, 0.4)'};
+  border: ${props => props.$isActive ? '2px solid rgba(255, 255, 255, 0.8)' : 'none'};
+  box-shadow: ${props => props.$isActive ? '0 0 8px rgba(255, 255, 255, 0.5)' : 'none'};
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  transform: scale(${props => props.isActive ? 1.2 : 1});
+  transform: scale(${props => props.$isActive ? 1.2 : 1});
   position: relative;
   z-index: 2;
   
@@ -172,12 +172,12 @@ const Bullet = styled.button<{ isActive: boolean }>`
   }
   
   @media (max-width: 768px) {
-    width: ${props => props.isActive ? '12px' : '8px'};
-    height: ${props => props.isActive ? '12px' : '8px'};
+    width: ${props => props.$isActive ? '12px' : '8px'};
+    height: ${props => props.$isActive ? '12px' : '8px'};
   }
 `;
 
-const SectionIndicator = styled.div<{ active: number, total: number }>`
+const SectionIndicator = styled.div<{ $active: number, $total: number }>`
   position: fixed;
   bottom: 2rem;
   left: 50%;
@@ -192,7 +192,7 @@ const SectionIndicator = styled.div<{ active: number, total: number }>`
   z-index: 100;
   
   &:before {
-    content: '${props => props.active + 1} / ${props => props.total}';
+    content: '${props => props.$active + 1} / ${props => props.$total}';
     margin-right: 0.5rem;
   }
   
@@ -207,13 +207,13 @@ const ProgressDots = styled.div`
   gap: 4px;
 `;
 
-const ProgressDot = styled.div<{ isActive: boolean }>`
+const ProgressDot = styled.div<{ $isActive: boolean }>`
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: ${props => props.isActive ? 'white' : 'rgba(255, 255, 255, 0.4)'};
+  background-color: ${props => props.$isActive ? 'white' : 'rgba(255, 255, 255, 0.4)'};
   transition: background-color 0.3s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  transform: ${props => props.isActive ? 'scale(1.2)' : 'scale(1)'};
+  transform: ${props => props.$isActive ? 'scale(1.2)' : 'scale(1)'};
 `;
 
 // Enhanced touch area for better mobile experience
@@ -491,7 +491,7 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
       
       {/* Navigation bullets */}
       <NavigationBullets aria-label="Section Navigation" role="navigation">
-        <ProgressIndicator progress={scrollProgress} aria-hidden="true" />
+        <ProgressIndicator $progress={scrollProgress} aria-hidden="true" />
         {sections.map((section, index) => (
           <BulletWrapper key={section.id}>
             <BulletLabel className="bullet-label">
@@ -522,7 +522,7 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
             
             <Bullet
               className="nav-bullet"
-              isActive={activeSection === index}
+              $isActive={activeSection === index}
               onClick={() => scrollToSection(index)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -541,15 +541,15 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
       
       {/* Section indicator at bottom */}
       <SectionIndicator 
-        active={activeSection} 
-        total={sections.length}
+        $active={activeSection} 
+        $total={sections.length}
         aria-hidden="true"
       >
         <ProgressDots>
           {sections.map((_, index) => (
             <ProgressDot 
               key={index} 
-              isActive={activeSection === index}
+              $isActive={activeSection === index}
               style={{ transitionDelay: `${Math.abs(activeSection - index) * 50}ms` }}
             />
           ))}

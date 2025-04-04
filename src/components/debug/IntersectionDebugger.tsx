@@ -2,6 +2,7 @@
 
 import React from 'react';
 import styled from 'styled-components';
+import { debugFeatures, isDebugFeatureEnabled } from '@/utils/debugUtils';
 
 interface IntersectionDebuggerProps {
   visibility: number[];
@@ -24,9 +25,6 @@ const DebugContainer = styled.div`
   max-height: 80vh;
   overflow-y: auto;
   pointer-events: none;
-  
-  /* Only show in development */
-  display: ${process.env.NODE_ENV === 'production' ? 'none' : 'block'};
 `;
 
 const Title = styled.div`
@@ -42,13 +40,13 @@ const SectionList = styled.ul`
   margin: 0;
 `;
 
-const SectionItem = styled.li<{ isActive: boolean }>`
+const SectionItem = styled.li<{ $isActive: boolean }>`
   padding: 6px 0;
-  border-left: 3px solid ${props => props.isActive ? '#6aff6a' : 'transparent'};
+  border-left: 3px solid ${props => props.$isActive ? '#6aff6a' : 'transparent'};
   padding-left: 10px;
   margin-bottom: 6px;
   transition: background-color 0.3s ease;
-  background-color: ${props => props.isActive ? 'rgba(106, 255, 106, 0.2)' : 'transparent'};
+  background-color: ${props => props.$isActive ? 'rgba(106, 255, 106, 0.2)' : 'transparent'};
 `;
 
 const VisibilityBar = styled.div`
@@ -60,14 +58,14 @@ const VisibilityBar = styled.div`
   overflow: hidden;
 `;
 
-const VisibilityFill = styled.div<{ width: number }>`
+const VisibilityFill = styled.div<{ $width: number }>`
   position: absolute;
   height: 100%;
-  width: ${props => props.width}%;
+  width: ${props => props.$width}%;
   background-color: ${props => {
-    if (props.width > 75) return '#6aff6a';
-    if (props.width > 50) return '#b8ff6a';
-    if (props.width > 25) return '#ffdd6a';
+    if (props.$width > 75) return '#6aff6a';
+    if (props.$width > 50) return '#b8ff6a';
+    if (props.$width > 25) return '#ffdd6a';
     return '#ff6a6a';
   }};
   border-radius: 4px;
@@ -90,7 +88,7 @@ const ThresholdMarker = styled.div`
 
 /**
  * Component for visualizing the Intersection Observer's visibility tracking
- * This is only shown in development mode
+ * Only shown when debug mode is enabled
  */
 const IntersectionDebugger: React.FC<IntersectionDebuggerProps> = ({ 
   visibility, 
@@ -102,16 +100,15 @@ const IntersectionDebugger: React.FC<IntersectionDebuggerProps> = ({
     return `${Math.round(value * 100)}%`;
   };
   
-  if (process.env.NODE_ENV === 'production') {
-    return null;
-  }
+  // Check if specific intersection observer debugging is enabled
+  const isIntersectionDebugEnabled = isDebugFeatureEnabled(debugFeatures.INTERSECTION_OBSERVER);
   
   return (
     <DebugContainer>
-      <Title>Intersection Observer Debug</Title>
+      <Title>Intersection Observer Debug {isIntersectionDebugEnabled ? '(Enhanced)' : ''}</Title>
       <SectionList>
         {Array.from({ length: totalSections }).map((_, index) => (
-          <SectionItem key={index} isActive={activeIndex === index}>
+          <SectionItem key={index} $isActive={activeIndex === index}>
             <SectionLabel>
               <span>Section {index + 1}</span>
               <span>{formatVisibility(visibility[index] || 0)}</span>
@@ -120,8 +117,16 @@ const IntersectionDebugger: React.FC<IntersectionDebuggerProps> = ({
               {/* Show threshold markers at 40% and 50% */}
               <ThresholdMarker style={{ left: '40%' }} />
               <ThresholdMarker style={{ left: '50%' }} />
-              <VisibilityFill width={(visibility[index] || 0) * 100} />
+              <VisibilityFill $width={(visibility[index] || 0) * 100} />
             </VisibilityBar>
+            
+            {/* Show additional details when enhanced debugging is enabled */}
+            {isIntersectionDebugEnabled && (
+              <div style={{ fontSize: '12px', marginTop: '5px', color: '#aaa' }}>
+                Status: {visibility[index] > 0.5 ? 'Visible' : 'Hidden'} 
+                | Threshold: {visibility[index] > 0.4 ? 'Passed' : 'Not Passed'}
+              </div>
+            )}
           </SectionItem>
         ))}
       </SectionList>
