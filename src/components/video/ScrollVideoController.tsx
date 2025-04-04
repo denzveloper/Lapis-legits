@@ -32,6 +32,9 @@ const VideoContainer = styled.div`
   z-index: 5;
   overflow: hidden;
   background-color: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const VideoOverlay = styled.div`
@@ -47,6 +50,7 @@ const VideoOverlay = styled.div`
     rgba(0, 0, 0, 0.5) 100%
   );
   z-index: 1;
+  pointer-events: none;
   
   @media (max-width: 768px) {
     background: linear-gradient(to bottom, 
@@ -65,6 +69,9 @@ const VideoElement = styled.video`
   position: absolute;
   top: 0;
   left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
   z-index: 2;
   
   @media (max-width: 768px) {
@@ -117,22 +124,27 @@ const ProgressBar = styled.div<{ $progress: number }>`
 const ContentContainer = styled(motion.div)`
   position: absolute;
   top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
   z-index: 2;
   text-align: center;
-  width: 80%;
-  max-width: 1200px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
   color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   
   @media (max-width: 768px) {
-    width: 90%;
-    top: 55%;
+    padding: 0 15px;
   }
   
   @media (max-width: 480px) {
-    width: 95%;
-    top: 60%;
+    padding: 0 10px;
   }
 `;
 
@@ -141,6 +153,10 @@ const Title = styled.h2`
   margin-bottom: var(--spacing-md);
   font-weight: 700;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
   
   @media (max-width: 768px) {
     font-size: var(--font-size-xlarge);
@@ -158,6 +174,7 @@ const Subtitle = styled.p`
   max-width: 800px;
   margin: 0 auto;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  text-align: center;
   
   @media (max-width: 768px) {
     font-size: var(--font-size-medium);
@@ -428,7 +445,14 @@ const ScrollVideoController: React.FC<ScrollVideoControllerProps> = ({
   
   return (
     <>
-      <VideoContainer style={{ height: viewportHeight > 0 ? `${viewportHeight}px` : '100vh' }}>
+      <VideoContainer 
+        style={{ 
+          height: viewportHeight > 0 ? `${viewportHeight}px` : '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
         {transitions.map((transition, index) => {
           const videoSrc = transition.videoSrc;
           const isActive = activeIndex === index;
@@ -436,7 +460,17 @@ const ScrollVideoController: React.FC<ScrollVideoControllerProps> = ({
           const isPosterVisible = transition.posterSrc && (!videosLoaded[index] || loadProgress < 1);
           
           return (
-            <div key={transition.id} style={{ display: isActive ? 'block' : 'none', position: 'relative', width: '100%', height: '100%' }}>
+            <div 
+              key={transition.id} 
+              style={{ 
+                display: isActive ? 'flex' : 'none', 
+                position: 'relative', 
+                width: '100%', 
+                height: '100%',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
               {/* Poster image shown until video is loaded */}
               {isPosterVisible && (
                 <PosterImage 
@@ -480,8 +514,8 @@ const ScrollVideoController: React.FC<ScrollVideoControllerProps> = ({
         
         {currentTransition.title && (
           <ContentContainer
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: opacity, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: opacity }}
             transition={{ duration: 0.5 }}
           >
             <Title>{currentTransition.title}</Title>
