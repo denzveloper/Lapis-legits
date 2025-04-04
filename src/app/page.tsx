@@ -8,6 +8,7 @@ import Footer from '@/components/layout/Footer';
 import VideoHero from '@/components/video/VideoHero';
 import VideoSection from '@/components/video/VideoSection';
 import ScrollVideoController from '@/components/video/ScrollVideoController';
+import ServicesSection from '@/components/services/ServicesSection';
 import Link from 'next/link';
 import { VideoSource } from '@/utils/videoPreloader';
 
@@ -236,31 +237,8 @@ export default function Home() {
               description="Dynamic event documentation that preserves the energy and highlights of your special moments."
             />
           
-            <SectionTitle>Our Services</SectionTitle>
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true, margin: "-100px" }}
-            >
-              {/* Service content will be added in future tasks */}
-              <p style={{ textAlign: 'center' }}>
-                LAPIS offers a comprehensive range of video production services tailored to your specific needs.
-              </p>
-            </motion.div>
-          
-            <SectionTitle>Contact Us</SectionTitle>
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true, margin: "-100px" }}
-            >
-              {/* Contact form will be added in future tasks */}
-              <p style={{ textAlign: 'center' }}>
-                Ready to start your project? Get in touch with our team.
-              </p>
-            </motion.div>
+            {/* Services Section */}
+            <ServicesSection />
           </ResponsiveContainer>
         </ContentSection>
       </Main>

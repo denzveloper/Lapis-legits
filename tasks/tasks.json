@@ -209,13 +209,71 @@
       "id": 5,
       "title": "Implement Services Section with Video Examples",
       "description": "Develop the services presentation section with descriptions and associated video snippets for each service category.",
-      "status": "pending",
+      "status": "in-progress",
       "dependencies": [
         2
       ],
       "priority": "medium",
       "details": "Design and implement services section layout with clear categorization. Create service card components with descriptive text and associated video snippets. Implement hover/click interaction to highlight services with subtle animations. Ensure videos in this section autoplay (muted) when in viewport and pause when not visible. Add placeholder content for all LAPIS service categories. Make section fully responsive with appropriate layout changes for mobile. Create smooth transitions between service categories if selected.",
-      "testStrategy": "Verify video autoplay behavior works correctly on scroll. Test service section responsiveness on various devices. Measure performance impact of multiple video elements. Test with screen readers for accessibility."
+      "testStrategy": "Verify video autoplay behavior works correctly on scroll. Test service section responsiveness on various devices. Measure performance impact of multiple video elements. Test with screen readers for accessibility.",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Create Service Section Layout and Data Structure",
+          "description": "Set up the foundational layout for the services section and establish the data structure to store service information including categories, descriptions, and video sources.",
+          "dependencies": [],
+          "details": "1. Design a responsive grid/flex layout for the services section using CSS Grid or Flexbox.\n2. Create a JSON data structure to store service information (title, description, category, video URL).\n3. Set up service categories with appropriate taxonomy.\n4. Implement a services context or Redux store to manage service data state.\n5. Create placeholder content for all LAPIS service categories.\n6. Testing approach: Validate JSON schema, verify rendering of layout containers with placeholder content, and test responsiveness across device sizes using browser dev tools.",
+          "status": "in-progress",
+          "parentTaskId": 5
+        },
+        {
+          "id": 2,
+          "title": "Develop Reusable Service Card Component",
+          "description": "Create a reusable service card component that displays service information and associated video player with appropriate styling and structure.",
+          "dependencies": [
+            1
+          ],
+          "details": "1. Build a React/Vue component for service cards with props for title, description, category, and video source.\n2. Style the component using CSS modules or styled-components for encapsulation.\n3. Implement responsive design principles to ensure cards display properly on all devices.\n4. Add semantic HTML structure for accessibility (proper headings, ARIA attributes).\n5. Create a video thumbnail/preview state that shows before playback.\n6. Testing approach: Create storybook stories for different card states and variations, test component rendering with mock data, and verify responsive behavior using viewport simulation tools.",
+          "status": "in-progress",
+          "parentTaskId": 5
+        },
+        {
+          "id": 3,
+          "title": "Implement Video Player with Autoplay Functionality",
+          "description": "Integrate a video player component that autoplays (muted) when in viewport and pauses when not visible, with appropriate optimization for performance.",
+          "dependencies": [
+            2
+          ],
+          "details": "1. Implement Intersection Observer API to detect when videos enter/exit viewport.\n2. Set up video player using React-Player or Video.js with muted autoplay configuration.\n3. Implement lazy loading for videos to improve page performance.\n4. Configure video compression and multiple format options (MP4, WebM) for cross-browser compatibility.\n5. Add fallback content for browsers where video playback isn't supported.\n6. Implement video preloading strategy (preload=\"metadata\") to optimize load times.\n7. Testing approach: Test intersection observer behavior with mock viewport changes, verify autoplay/pause functionality across browsers, and measure performance impact using Lighthouse or WebPageTest.",
+          "status": "in-progress",
+          "parentTaskId": 5
+        },
+        {
+          "id": 4,
+          "title": "Create Hover/Click Interactions and Animations",
+          "description": "Implement interactive hover and click states for service cards with subtle animations that enhance user experience without being distracting.",
+          "dependencies": [
+            2
+          ],
+          "details": "1. Design hover states that highlight service cards using CSS transitions for smooth effects.\n2. Implement click/tap interactions to expand service details or focus on specific cards.\n3. Add subtle animations using CSS animations or a library like Framer Motion.\n4. Ensure animations respect user preferences for reduced motion using prefers-reduced-motion media query.\n5. Create smooth transitions between service categories when selected.\n6. Optimize animations for performance by using transform and opacity properties.\n7. Testing approach: Manually test interactions across devices, verify animation performance using Chrome DevTools Performance tab, and test accessibility with screen readers to ensure animations don't interfere with usability.",
+          "status": "in-progress",
+          "parentTaskId": 5
+        },
+        {
+          "id": 5,
+          "title": "Implement Responsive Behavior and Final Integration",
+          "description": "Finalize the services section by implementing responsive layout adaptations for different screen sizes and integrating all components into a cohesive section.",
+          "dependencies": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "details": "1. Implement media queries for layout changes at different breakpoints (mobile, tablet, desktop).\n2. Adjust video player size and quality based on screen size and connection speed.\n3. Create different navigation patterns for service categories on mobile vs. desktop.\n4. Implement touch-friendly interactions for mobile users.\n5. Perform cross-browser testing and fix any compatibility issues.\n6. Optimize overall performance with code splitting and asset optimization.\n7. Add analytics tracking to monitor user interactions with service cards and videos.\n8. Testing approach: Test on real devices across different operating systems, run Lighthouse audits for performance and accessibility, and conduct usability testing with actual users if possible.",
+          "status": "done",
+          "parentTaskId": 5
+        }
+      ]
     },
     {
       "id": 6,
