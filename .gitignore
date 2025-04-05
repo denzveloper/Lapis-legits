@@ -34,10 +34,5 @@ tasks/
 tasks/task_002.txt
 tasks/tasks.json
 
-# Media files
-*.mov
-*.mp4
-*.avi
-*.mkv
-*.webm
+
 # If you want to force include specific media files, use !filename pattern

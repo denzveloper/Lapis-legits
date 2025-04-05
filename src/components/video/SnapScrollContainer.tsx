@@ -247,6 +247,24 @@ const Ripple = styled(motion.div)`
   pointer-events: none;
 `;
 
+// Add new styled component for skip link
+const SkipLink = styled.a`
+  position: absolute;
+  top: -40px;
+  left: 0;
+  padding: 8px 16px;
+  background-color: white;
+  color: black;
+  z-index: 1000;
+  transition: top 0.3s ease;
+  
+  &:focus {
+    top: 0;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.5);
+  }
+`;
+
 const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({ 
   children, 
   sections,
@@ -260,6 +278,8 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
   const [showRipple, setShowRipple] = useState<number | null>(null);
   const [lastInteraction, setLastInteraction] = useState<'scroll' | 'click'>('scroll');
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  // Add ref for the announcement for screen readers
+  const announcerRef = useRef<HTMLDivElement>(null);
   
   // Initialize section refs array and visibility tracking
   useEffect(() => {
@@ -377,9 +397,20 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
         onSectionChange(index);
       }
       
+      // Announce section change to screen readers
+      if (announcerRef.current) {
+        announcerRef.current.textContent = `Navigated to ${sections[index]?.title || `section ${index + 1}`}`;
+      }
+      
       // Schedule the scroll
       setTimeout(() => {
         sectionRefs.current[index]?.scrollIntoView({ behavior: 'smooth' });
+        
+        // Focus the section for keyboard users
+        if (sectionRefs.current[index]) {
+          sectionRefs.current[index]?.setAttribute('tabindex', '-1');
+          sectionRefs.current[index]?.focus();
+        }
         
         // Reset interaction type after scrolling completes
         setTimeout(() => {
@@ -416,27 +447,54 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle keyboard navigation if not in an input field
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) {
+        return;
+      }
+      
+      let handled = false;
+      
       switch (e.key) {
         case 'ArrowDown':
         case 'PageDown':
           if (activeSection < sections.length - 1) {
             scrollToSection(activeSection + 1);
+            handled = true;
           }
           break;
         case 'ArrowUp':
         case 'PageUp':
           if (activeSection > 0) {
             scrollToSection(activeSection - 1);
+            handled = true;
           }
           break;
         case 'Home':
           scrollToSection(0);
+          handled = true;
           break;
         case 'End':
           scrollToSection(sections.length - 1);
+          handled = true;
+          break;
+        case 'Tab':
+          // Let Tab navigation work naturally
           break;
         default:
+          // Handle number keys for direct section access (1-9)
+          if (!e.ctrlKey && !e.altKey && !e.metaKey && /^[1-9]$/.test(e.key)) {
+            const sectionIndex = parseInt(e.key, 10) - 1;
+            if (sectionIndex >= 0 && sectionIndex < sections.length) {
+              scrollToSection(sectionIndex);
+              handled = true;
+            }
+          }
           break;
+      }
+      
+      // Prevent default browser behavior for handled keys
+      if (handled) {
+        e.preventDefault();
       }
     };
     
@@ -474,15 +532,51 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
   
   return (
     <>
+      {/* Skip to content link for accessibility */}
+      <SkipLink 
+        href="#main-content"
+        tabIndex={0}
+        onClick={(e) => {
+          e.preventDefault();
+          scrollToSection(0);
+        }}
+      >
+        Skip to main content
+      </SkipLink>
+      
+      {/* Screen reader announcer (visually hidden) */}
+      <div
+        ref={announcerRef}
+        role="status"
+        aria-live="polite"
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          padding: 0,
+          margin: '-1px',
+          overflow: 'hidden',
+          clip: 'rect(0, 0, 0, 0)',
+          whiteSpace: 'nowrap',
+          border: 0
+        }}
+      />
+      
       <Container 
         ref={containerRef}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
+        role="region"
+        aria-roledescription="scrollable content"
       >
         {React.Children.map(children, (child, index) => (
           <Section
             ref={(el) => { sectionRefs.current[index] = el; }}
             key={sections[index]?.id || `section-${index}`}
+            tabIndex={activeSection === index ? 0 : -1}
+            role="region"
+            aria-label={sections[index]?.title || `Section ${index + 1}`}
+            id={index === 0 ? "main-content" : `section-${sections[index]?.id || index}`}
           >
             {child}
           </Section>
@@ -490,7 +584,10 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
       </Container>
       
       {/* Navigation bullets */}
-      <NavigationBullets aria-label="Section Navigation" role="navigation">
+      <NavigationBullets 
+        aria-label="Section Navigation" 
+        role="navigation"
+      >
         <ProgressIndicator $progress={scrollProgress} aria-hidden="true" />
         {sections.map((section, index) => (
           <BulletWrapper key={section.id}>
@@ -501,12 +598,6 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
             {/* Enhanced click target for better touch experience */}
             <TouchArea 
               onClick={() => scrollToSection(index)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  scrollToSection(index);
-                }
-              }}
               tabIndex={-1}
               aria-hidden="true"
             />
@@ -534,6 +625,7 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
               aria-current={activeSection === index ? 'true' : 'false'}
               role="button"
               tabIndex={0}
+              aria-controls={`section-${section.id || index}`}
             />
           </BulletWrapper>
         ))}
