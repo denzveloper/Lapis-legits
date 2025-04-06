@@ -5,6 +5,14 @@ import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { preloadVideo, preloadVideos, VideoSource } from '../../utils/videoPreloader';
 import { Pause, Play, Volume2, VolumeX, RotateCcw } from 'lucide-react';
+import { gsap } from 'gsap';
+
+// Import text animation utilities
+import { 
+  typewriterAnimation, 
+  textScrambleAnimation, 
+  splitTextAnimation 
+} from '../../utils/textAnimations';
 
 // Type definitions
 export interface VideoSection {
@@ -16,6 +24,8 @@ export interface VideoSection {
   textPosition?: 'left' | 'right' | 'center';
   textColor?: string;
   backgroundColor?: string;
+  textAnimation?: 'typewriter' | 'scramble' | 'split' | 'fade' | 'none';
+  textAnimationOptions?: Record<string, any>;
 }
 
 interface SnapScrollVideoSectionProps {
@@ -206,18 +216,11 @@ const containerVariants = {
   }
 };
 
+// Use simple variants for non-GSAP fallback animations
 const itemVariants = {
-  hidden: { y: 40, opacity: 0 },
-  visible: { 
-    y: 0, 
-    opacity: 1,
-    transition: { duration: 0.8, ease: [0.16, 0.77, 0.47, 0.97] }
-  },
-  exit: { 
-    y: -40, 
-    opacity: 0,
-    transition: { duration: 0.6, ease: [0.16, 0.77, 0.47, 0.97] }
-  }
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+  exit: { opacity: 0 }
 };
 
 const cinemaBarVariants = {
@@ -238,6 +241,11 @@ const SnapScrollVideoSection: React.FC<SnapScrollVideoSectionProps> = ({
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const autoplayTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasPlayedOnceRef = useRef<Record<string, boolean>>({}); // Track if section played since last view
+  
+  // References for text animation elements
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const textTimelineRef = useRef<gsap.core.Timeline | null>(null);
 
   const currentSection = sections[activeIndex];
 
@@ -346,10 +354,164 @@ const SnapScrollVideoSection: React.FC<SnapScrollVideoSectionProps> = ({
      });
    }, [activeIndex, currentSection]);
 
-  // Handler for video load events (kept simple)
-  // const handleVideoLoaded = (id: string) => {
-  //   setLoadedVideos(prev => ({ ...prev, [id]: true }));
-  // };
+  // Effect 5: Handle text animations with GSAP
+  useEffect(() => {
+    // Clear any existing animations
+    if (textTimelineRef.current) {
+      textTimelineRef.current.kill();
+      textTimelineRef.current = null;
+    }
+
+    // If section not in view, don't animate text
+    if (!isInView || !currentSection) return;
+
+    // Get references to elements
+    const titleElement = titleRef.current;
+    const subtitleElement = subtitleRef.current;
+    
+    if (!titleElement) return;
+    
+    // Create a timeline for coordinating text animations
+    const timeline = gsap.timeline({
+      delay: 0.5, // Wait for container animation to start
+      paused: true,
+    });
+    
+    const animationType = currentSection.textAnimation || 'fade';
+    const animationOptions = currentSection.textAnimationOptions || {};
+
+    // Apply appropriate animation based on configuration
+    switch (animationType) {
+      case 'typewriter': {
+        // First reset text to ensure clean animation
+        if (titleElement) titleElement.textContent = '';
+        if (subtitleElement) subtitleElement.textContent = '';
+        
+        // Title with typewriter
+        const titleTl = typewriterAnimation(titleElement, currentSection.title, {
+          duration: 2,
+          ...animationOptions
+        });
+        
+        if (titleTl) {
+          timeline.add(titleTl);
+        }
+        
+        // Subtitle with typewriter (if present)
+        if (subtitleElement && currentSection.subtitle) {
+          const subtitleTl = typewriterAnimation(subtitleElement, currentSection.subtitle, {
+            duration: 1.5,
+            ...animationOptions
+          });
+          
+          if (subtitleTl) {
+            timeline.add(subtitleTl, "+=0.3"); // Start after title with small delay
+          }
+        }
+        break;
+      }
+      
+      case 'scramble': {
+        // First reset text to ensure clean animation
+        if (titleElement) titleElement.textContent = '';
+        if (subtitleElement) subtitleElement.textContent = '';
+        
+        // Title with scramble effect
+        const titleTl = textScrambleAnimation(titleElement, currentSection.title, {
+          duration: 1.5,
+          ...animationOptions
+        });
+        
+        if (titleTl) {
+          timeline.add(titleTl);
+        }
+        
+        // Subtitle with scramble (if present)
+        if (subtitleElement && currentSection.subtitle) {
+          const subtitleTl = textScrambleAnimation(subtitleElement, currentSection.subtitle, {
+            duration: 1,
+            ...animationOptions
+          });
+          
+          if (subtitleTl) {
+            timeline.add(subtitleTl, "+=0.2"); // Start after title with small delay
+          }
+        }
+        break;
+      }
+      
+      case 'split': {
+        // Set initial text content
+        if (titleElement) titleElement.textContent = currentSection.title;
+        if (subtitleElement && currentSection.subtitle) {
+          subtitleElement.textContent = currentSection.subtitle;
+        }
+        
+        // Title with split text animation
+        const titleContext = splitTextAnimation(titleElement, {
+          direction: 'up',
+          stagger: 0.03,
+          duration: 0.8,
+          ...animationOptions
+        });
+        
+        // Add a delay before subtitle animation
+        timeline.addLabel('afterTitle', 0.5);
+        
+        // Subtitle with split text (if present)
+        if (subtitleElement && currentSection.subtitle) {
+          const subtitleContext = splitTextAnimation(subtitleElement, {
+            direction: 'up',
+            stagger: 0.02,
+            duration: 0.6,
+            ...animationOptions
+          });
+          
+          // No need to add to timeline as split text handles its own animation
+        }
+        break;
+      }
+      
+      case 'none':
+        // No animation, just set text content
+        if (titleElement) titleElement.textContent = currentSection.title;
+        if (subtitleElement && currentSection.subtitle) {
+          subtitleElement.textContent = currentSection.subtitle;
+        }
+        break;
+      
+      case 'fade':
+      default: {
+        // Default fade in animation - similar to original behavior but with GSAP
+        if (titleElement) {
+          titleElement.textContent = currentSection.title;
+          titleElement.style.opacity = '0';
+          timeline.to(titleElement, { opacity: 1, duration: 0.8, ease: 'power2.out' });
+        }
+        
+        if (subtitleElement && currentSection.subtitle) {
+          subtitleElement.textContent = currentSection.subtitle;
+          subtitleElement.style.opacity = '0';
+          timeline.to(subtitleElement, { opacity: 1, duration: 0.8, ease: 'power2.out' }, "+=0.1");
+        }
+        break;
+      }
+    }
+    
+    // Store timeline reference for cleanup
+    textTimelineRef.current = timeline;
+    
+    // Play the animation
+    timeline.play();
+    
+    // Cleanup on unmount or index change
+    return () => {
+      if (textTimelineRef.current) {
+        textTimelineRef.current.kill();
+        textTimelineRef.current = null;
+      }
+    };
+  }, [currentSection, activeIndex, isInView]);
 
   // Video control handlers
   const togglePlay = () => {
@@ -461,13 +623,20 @@ const SnapScrollVideoSection: React.FC<SnapScrollVideoSectionProps> = ({
               position={currentSection.textPosition}
               textColor={currentSection.textColor}
             >
-              <Title variants={itemVariants}>
-                {currentSection.title}
+              {/* Using refs instead of framer-motion variants for GSAP animations */}
+              <Title 
+                ref={titleRef} 
+                variants={itemVariants}
+              >
+                {/* Text content will be set by the GSAP animations */}
               </Title>
 
               {currentSection.subtitle && (
-                <Subtitle variants={itemVariants}>
-                  {currentSection.subtitle}
+                <Subtitle 
+                  ref={subtitleRef}
+                  variants={itemVariants}
+                >
+                  {/* Text content will be set by the GSAP animations */}
                 </Subtitle>
               )}
             </ContentOverlay>

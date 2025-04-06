@@ -179,40 +179,56 @@ const ScrollIndicator = styled.div`
 // Define video sections for the main page
 const videoSections: VideoSection[] = [
   {
-    id: 'hero-section',
-    title: 'Captivating Visual Stories That Inspire',
-    subtitle: 'LAPIS creates immersive visual experiences that blend artistry with powerful storytelling',
-    videoSrc: { 
-      src: '/videos/lapis_demo.mp4',
-      type: 'video/mp4'
-    },
+    id: 'intro',
+    title: 'Welcome to Lapis',
+    subtitle: 'Creating beautiful digital experiences',
+    videoSrc: { src: '/videos/lapis_demo.mp4', type: 'video/mp4' },
     textPosition: 'center',
     textColor: 'white',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)'
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    textAnimation: 'typewriter',
+    textAnimationOptions: {
+      duration: 1,
+      delay: 0,
+      cursor: true,
+      cursorChar: '|',
+      cursorColor: '#ffffff',
+      cursorStyle: 'blink',
+      cursorBlinkSpeed: 0.5,
+      randomize: true,
+      speedVariation: 0.6,
+      pauseProbability: 0.4,
+      maxPauseDuration: 0.1
+    }
   },
   {
-    id: 'commercial-section',
-    title: 'Commercial Productions',
-    subtitle: 'High-impact video content that drives engagement and elevates your brand',
-    videoSrc: { 
-      src: '/videos/lapis_demo.mp4',
-      type: 'video/mp4'
-    },
+    id: 'services',
+    title: 'Professional Services',
+    subtitle: 'Web Development • Mobile Apps • Digital Marketing',
+    videoSrc: { src: '/videos/lapis_demo.mp4', type: 'video/mp4' },
     textPosition: 'left',
     textColor: 'white',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)'
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    textAnimation: 'scramble',
+    textAnimationOptions: {
+      duration: 2,
+      ease: 'power2.inOut'
+    }
   },
   {
-    id: 'documentary-section',
-    title: 'Documentary Storytelling',
-    subtitle: 'Authentic narratives that connect with audiences on a deeper level',
-    videoSrc: { 
-      src: '/videos/lapis_demo.mp4',
-      type: 'video/mp4'
-    },
+    id: 'portfolio',
+    title: 'Our Work',
+    subtitle: 'Explore our portfolio of successful projects',
+    videoSrc: { src: '/videos/lapis_demo.mp4', type: 'video/mp4' },
     textPosition: 'right',
     textColor: 'white',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)'
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    textAnimation: 'split',
+    textAnimationOptions: {
+      staggerFrom: 'edges',
+      direction: 'up',
+      stagger: 0.04
+    }
   }
 ];
 
