@@ -123,29 +123,17 @@ const ProgressBar = styled.div<{ $progress: number }>`
 
 const ContentContainer = styled(motion.div)`
   position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  transform: translateY(-50%);
+  inset: 0;
+  margin: auto;
   z-index: 2;
   text-align: center;
   width: 100%;
   max-width: 100%;
-  margin: 0 auto;
-  padding: 0 20px;
   color: white;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  
-  @media (max-width: 768px) {
-    padding: 0 15px;
-  }
-  
-  @media (max-width: 480px) {
-    padding: 0 10px;
-  }
 `;
 
 const Title = styled.h2`
@@ -154,17 +142,19 @@ const Title = styled.h2`
   font-weight: 700;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   text-align: center;
-  width: 100%;
-  margin-left: auto;
-  margin-right: auto;
+  width: auto;
+  max-width: 1200px;
+  padding: 0 20px;
   
   @media (max-width: 768px) {
     font-size: var(--font-size-xlarge);
     margin-bottom: var(--spacing-sm);
+    padding: 0 15px;
   }
   
   @media (max-width: 480px) {
     font-size: calc(var(--font-size-large) * 1.25);
+    padding: 0 10px;
   }
 `;
 
@@ -518,10 +508,19 @@ const ScrollVideoController: React.FC<ScrollVideoControllerProps> = ({
             animate={{ opacity: opacity }}
             transition={{ duration: 0.5 }}
           >
-            <Title>{currentTransition.title}</Title>
-            {currentTransition.subtitle && (
-              <Subtitle>{currentTransition.subtitle}</Subtitle>
-            )}
+            <div style={{ 
+              maxWidth: '1200px', 
+              width: '100%', 
+              margin: '0 auto',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}>
+              <Title>{currentTransition.title}</Title>
+              {currentTransition.subtitle && (
+                <Subtitle>{currentTransition.subtitle}</Subtitle>
+              )}
+            </div>
           </ContentContainer>
         )}
       </VideoContainer>

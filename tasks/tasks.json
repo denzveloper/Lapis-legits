@@ -340,6 +340,76 @@
       "priority": "high",
       "details": "Perform comprehensive performance audit and optimization. Implement advanced lazy loading for all media assets. Add service worker for offline capabilities and caching. Configure CDN for optimal video delivery. Set up proper caching headers and compression. Implement SEO optimizations including metadata, sitemap, and structured data. Create 404 and error pages. Configure CI/CD pipeline for automated testing and deployment. Perform security audit and fix any vulnerabilities. Prepare documentation for maintenance and future development.",
       "testStrategy": "Run Lighthouse audit and achieve scores of 90+ in all categories. Test website performance on slow connections and devices. Verify SEO elements are correctly implemented. Test deployment process and rollback capabilities. Conduct cross-browser testing on major browsers and devices."
+    },
+    {
+      "id": 11,
+      "title": "Implement Snap-Scroll Behavior with Navigation Bullets for Video Sections",
+      "description": "Create a smooth snap-scrolling experience between video sections with synchronized navigation bullets that indicate current position and allow direct navigation to specific sections.",
+      "status": "done",
+      "dependencies": [],
+      "priority": "high",
+      "details": "Implement a snap-scroll mechanism that automatically aligns video sections perfectly in the viewport when users scroll. Each video section should snap into place when it reaches a certain threshold (typically center or top of viewport). \n\nThe implementation should include:\n1. CSS scroll-snap-type and scroll-snap-align properties for the container and video sections respectively\n2. A set of navigation bullets (dots) that appear fixed on screen, showing the total number of video sections\n3. Active state styling for the bullet corresponding to the currently visible video section\n4. Click/tap functionality on bullets to navigate directly to the corresponding video section\n5. Smooth animation for both scroll-based navigation and bullet-based navigation\n6. Touch-friendly implementation that works with swipe gestures on mobile devices\n7. Keyboard accessibility for navigation between sections (arrow keys)\n8. Consider using Intersection Observer API to detect which section is currently in view\n9. Ensure the feature degrades gracefully on browsers that don't support scroll-snap\n10. Implement appropriate ARIA attributes for accessibility compliance",
+      "testStrategy": "Testing should verify both the snap-scrolling behavior and the navigation bullet functionality:\n\n1. Functional Testing:\n   - Verify snap-scrolling works when manually scrolling with mouse wheel, touchpad, and keyboard\n   - Confirm each video section snaps precisely into the viewport\n   - Test that clicking each navigation bullet scrolls to the correct video section\n   - Verify the active bullet updates correctly as different sections come into view\n   - Test keyboard navigation (arrow keys) between sections\n\n2. Cross-browser Testing:\n   - Test in Chrome, Firefox, Safari, and Edge\n   - Verify fallback behavior in browsers with limited scroll-snap support\n\n3. Device Testing:\n   - Test on desktop, tablet, and mobile devices\n   - Verify touch gestures (swipe) trigger proper snap-scrolling\n   - Ensure navigation bullets are appropriately sized and spaced for touch interaction on mobile\n\n4. Performance Testing:\n   - Measure scroll performance to ensure smooth animations without jank\n   - Verify CPU/GPU usage remains reasonable during scrolling animations\n\n5. Accessibility Testing:\n   - Verify screen readers announce the navigation bullets appropriately\n   - Test keyboard-only navigation\n   - Ensure sufficient color contrast for navigation bullets",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Set up container and video sections with CSS scroll-snap properties",
+          "description": "Configure the container and video sections with CSS scroll-snap properties to enable the basic snap-scrolling behavior between sections.",
+          "dependencies": [],
+          "details": "Implementation steps:\n1. Add `scroll-snap-type: y mandatory` (or `y proximity` depending on desired behavior) to the container element\n2. Set `scroll-snap-align: center` (or start/end based on design requirements) on each video section\n3. Ensure the container has `overflow-y: scroll` or `auto`\n4. Set appropriate height on sections (e.g., 100vh for full-height sections)\n5. Add smooth scrolling with `scroll-behavior: smooth` on the container\n6. Test the basic snapping behavior across different browsers\n7. Implement a fallback for browsers that don't support scroll-snap using feature detection\n\nTesting approach:\n- Manually test scrolling behavior in major browsers\n- Verify that sections snap correctly at different scroll speeds\n- Test on both desktop and mobile devices to ensure consistent behavior",
+          "status": "done",
+          "parentTaskId": 11
+        },
+        {
+          "id": 2,
+          "title": "Create navigation bullets with active state indication",
+          "description": "Create a fixed navigation component with bullets that represent each video section, including styling for active/inactive states.",
+          "dependencies": [
+            1
+          ],
+          "details": "Implementation steps:\n1. Create a fixed-position container for the navigation bullets (typically positioned on the side or bottom of the screen)\n2. Dynamically generate bullet elements based on the number of video sections\n3. Implement CSS for bullet styling (normal state, hover state, and active state)\n4. Add appropriate ARIA attributes for accessibility:\n   - `role=\"tablist\"` for the container\n   - `role=\"tab\"` for each bullet\n   - `aria-label` with descriptive text\n5. Add basic HTML structure with appropriate class names for styling\n6. Position the navigation component appropriately using CSS\n7. Ensure the bullets are visible against different background colors/content\n\nTesting approach:\n- Verify correct number of bullets are generated based on video sections\n- Check that styling works correctly across browsers\n- Test visibility against different backgrounds\n- Validate accessibility using screen readers and automated tools",
+          "status": "done",
+          "parentTaskId": 11
+        },
+        {
+          "id": 3,
+          "title": "Implement Intersection Observer to track current section and update active bullet",
+          "description": "Use the Intersection Observer API to detect which video section is currently in view and update the corresponding navigation bullet to show active state.",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "Implementation steps:\n1. Create an Intersection Observer instance with appropriate threshold and rootMargin options\n2. Add the observer to each video section element\n3. In the observer callback, determine which section has the highest visibility ratio\n4. Update the active class on the corresponding navigation bullet\n5. Update ARIA attributes (`aria-selected=\"true\"`) for the active bullet\n6. Add appropriate data attributes to connect sections with their corresponding bullets\n7. Implement a fallback for browsers without Intersection Observer support\n8. Handle edge cases such as partially visible sections\n\nTesting approach:\n- Test scrolling at different speeds to ensure the active bullet updates correctly\n- Verify that the correct section is identified as active when partially scrolled\n- Test with different viewport sizes\n- Check browser compatibility, especially with the fallback implementation",
+          "status": "done",
+          "parentTaskId": 11
+        },
+        {
+          "id": 4,
+          "title": "Add click/tap functionality to navigation bullets for direct section navigation",
+          "description": "Implement event handlers for the navigation bullets to allow users to click/tap directly on a bullet to navigate to the corresponding video section.",
+          "dependencies": [
+            2,
+            3
+          ],
+          "details": "Implementation steps:\n1. Add click event listeners to each navigation bullet\n2. Implement a scroll function that navigates to the corresponding video section when a bullet is clicked\n3. Use `scrollIntoView({ behavior: 'smooth', block: 'center' })` or equivalent for smooth scrolling\n4. Ensure the active state updates correctly after programmatic scrolling\n5. Add appropriate hover and focus states for better user experience\n6. Implement touch event handling for better mobile experience\n7. Add visual feedback (e.g., slight animation) when bullets are clicked\n8. Prevent default behavior and stop propagation as needed\n\nTesting approach:\n- Test clicking on each bullet to ensure correct scrolling behavior\n- Verify that active states update correctly after clicking\n- Test on touch devices to ensure tap functionality works\n- Check that keyboard navigation works with the bullet navigation",
+          "status": "done",
+          "parentTaskId": 11
+        },
+        {
+          "id": 5,
+          "title": "Implement keyboard navigation and finalize accessibility features",
+          "description": "Add keyboard navigation support using arrow keys and enhance overall accessibility compliance for the snap-scroll feature.",
+          "dependencies": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "details": "Implementation steps:\n1. Add a global keydown event listener to detect arrow key presses\n2. Implement handlers for up/down arrow keys to navigate between sections\n3. Ensure the focus state is properly managed during keyboard navigation\n4. Update the active bullet when navigating via keyboard\n5. Add tabindex attributes to make navigation bullets focusable\n6. Implement focus management that follows the reading order\n7. Add additional ARIA attributes as needed:\n   - `aria-controls` to connect bullets with their target sections\n   - `aria-label` with descriptive text for each section\n8. Test and refine all accessibility features\n9. Implement skip navigation option for screen reader users\n\nTesting approach:\n- Test keyboard navigation using only the keyboard\n- Verify ARIA attributes are correctly implemented using browser dev tools\n- Test with screen readers (VoiceOver, NVDA, JAWS)\n- Run automated accessibility tests\n- Ensure focus is visible and follows a logical order\n- Verify that all interactive elements are reachable via keyboard",
+          "status": "done",
+          "parentTaskId": 11
+        }
+      ]
     }
   ],
   "metadata": {
