@@ -1,4 +1,4 @@
-import { TEXT_ANIMATIONS, VIDEO_POSITIONS } from '../constants/video';
+import { TEXT_ANIMATIONS, VIDEO_POSITIONS } from '../components/video/LazyVideoSection';
 import { VideoSection } from '../components/video/SnapScrollVideoSection';
 
 export const videoSections: VideoSection[] = [

@@ -4,7 +4,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { Pause, Play, Volume2, VolumeX, RotateCcw } from 'lucide-react';
-import { VIDEO_CONSTANTS } from '@/constants/video';
+import { VIDEO_CONSTANTS } from '@/components/video/LazyVideoSection';
 
 interface VideoControlsProps {
   isPlaying: boolean;

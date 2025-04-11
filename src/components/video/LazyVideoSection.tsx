@@ -2,6 +2,7 @@
  * Client-side component for lazy-loading a video section with a smooth loading animation.
  * Uses Next.js dynamic imports to load the video section only when needed, improving performance.
  * Includes a styled loading spinner with fade-in/out animations for a polished user experience.
+ * Also exports video-related constants for use throughout the application.
  */
 'use client';
 
@@ -10,6 +11,46 @@ import React from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { DynamicOptionsLoadingProps } from 'next/dynamic';
+
+/**
+ * Video configuration constants.
+ * Contains timing, animation, and layout parameters for video components.
+ */
+export const VIDEO_CONSTANTS = {
+  AUTOPLAY_DELAY: 2000,
+  MOBILE_BREAKPOINT: 480,
+  TABLET_BREAKPOINT: 768,
+  SCROLL_INDICATOR_DELAY: 1000,
+  VIDEO_PRELOAD_PRIORITY: {
+    CURRENT: 5,
+    NEXT: 3
+  },
+  ANIMATION_DELAYS: {
+    TEXT_ANIMATION: 0.5,
+    CONTROLS_FADE: 0.3,
+    CONTROLS_DURATION: 0.4
+  }
+};
+
+/**
+ * Video positioning options for layout purposes.
+ */
+export const VIDEO_POSITIONS = {
+  LEFT: 'left',
+  RIGHT: 'right',
+  CENTER: 'center'
+} as const;
+
+/**
+ * Text animation style options for video overlays.
+ */
+export const TEXT_ANIMATIONS = {
+  TYPEWRITER: 'typewriter',
+  SCRAMBLE: 'scramble',
+  SPLIT: 'split',
+  FADE: 'fade',
+  NONE: 'none'
+} as const;
 
 /**
  * Styled container for the loading spinner.

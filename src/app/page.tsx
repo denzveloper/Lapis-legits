@@ -11,7 +11,7 @@ import SnapScrollContainer from '@/components/video/SnapScrollContainer';
 import LazyVideoSection from '@/components/video/LazyVideoSection';
 import { IntersectionDebugger } from '@/components/debug';
 import { isDebugModeEnabled, getDebugToggleUrl, debugLog, debugFeatures } from '@/utils/debugUtils';
-import { VIDEO_CONSTANTS } from '@/constants/video';
+import { VIDEO_CONSTANTS } from '@/components/video/LazyVideoSection';
 import { videoSections } from '@/config/videoSections';
 
 const Main = styled.main`
