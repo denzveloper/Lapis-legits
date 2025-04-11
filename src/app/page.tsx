@@ -8,9 +8,11 @@ import Footer from '@/components/layout/Footer';
 import ServicesSection from '@/components/services/ServicesSection';
 import Link from 'next/link';
 import SnapScrollContainer from '@/components/video/SnapScrollContainer';
-import SnapScrollVideoSection, { VideoSection } from '@/components/video/SnapScrollVideoSection';
+import LazyVideoSection from '@/components/video/LazyVideoSection';
 import { IntersectionDebugger } from '@/components/debug';
 import { isDebugModeEnabled, getDebugToggleUrl, debugLog, debugFeatures } from '@/utils/debugUtils';
+import { VIDEO_CONSTANTS } from '@/constants/video';
+import { videoSections } from '@/config/videoSections';
 
 const Main = styled.main`
   width: 100%;
@@ -176,62 +178,6 @@ const ScrollIndicator = styled.div`
   }
 `;
 
-// Define video sections for the main page
-const videoSections: VideoSection[] = [
-  {
-    id: 'intro',
-    title: 'Welcome to Lapis',
-    subtitle: 'Creating beautiful digital experiences',
-    videoSrc: { src: '/videos/lapis_demo.mp4', type: 'video/mp4' },
-    textPosition: 'center',
-    textColor: 'white',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    textAnimation: 'typewriter',
-    textAnimationOptions: {
-      duration: 1,
-      delay: 0,
-      cursor: true,
-      cursorChar: '|',
-      cursorColor: '#ffffff',
-      cursorStyle: 'blink',
-      cursorBlinkSpeed: 0.5,
-      randomize: true,
-      speedVariation: 0.6,
-      pauseProbability: 0.4,
-      maxPauseDuration: 0.1
-    }
-  },
-  {
-    id: 'services',
-    title: 'Professional Services',
-    subtitle: 'Web Development • Mobile Apps • Digital Marketing',
-    videoSrc: { src: '/videos/lapis_demo.mp4', type: 'video/mp4' },
-    textPosition: 'left',
-    textColor: 'white',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    textAnimation: 'scramble',
-    textAnimationOptions: {
-      duration: 2,
-      ease: 'power2.inOut'
-    }
-  },
-  {
-    id: 'portfolio',
-    title: 'Our Work',
-    subtitle: 'Explore our portfolio of successful projects',
-    videoSrc: { src: '/videos/lapis_demo.mp4', type: 'video/mp4' },
-    textPosition: 'right',
-    textColor: 'white',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    textAnimation: 'split',
-    textAnimationOptions: {
-      staggerFrom: 'edges',
-      direction: 'up',
-      stagger: 0.04
-    }
-  }
-];
-
 export default function Home() {
   const mainRef = useRef<HTMLDivElement>(null);
   const contentSectionRef = useRef<HTMLElement>(null);
@@ -252,6 +198,19 @@ export default function Home() {
       import('intersection-observer');
     }
     
+    // Add keyboard shortcut handler for debug mode
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'd') {
+        event.preventDefault();
+        setDebugMode(prev => !prev);
+        // Update URL to reflect debug mode change
+        const newUrl = getDebugToggleUrl(!debugMode);
+        window.history.pushState({}, '', newUrl);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    
     // Debounce scroll events for better performance
     let timeout: NodeJS.Timeout;
     
@@ -263,8 +222,8 @@ export default function Home() {
     };
     
     const checkDevice = () => {
-      setIsMobile(window.innerWidth <= 480);
-      setIsTablet(window.innerWidth > 480 && window.innerWidth <= 768);
+      setIsMobile(window.innerWidth <= VIDEO_CONSTANTS.MOBILE_BREAKPOINT);
+      setIsTablet(window.innerWidth > VIDEO_CONSTANTS.MOBILE_BREAKPOINT && window.innerWidth <= VIDEO_CONSTANTS.TABLET_BREAKPOINT);
     };
     
     // Check for debug mode
@@ -281,9 +240,10 @@ export default function Home() {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', checkDevice);
       window.removeEventListener('orientationchange', checkDevice);
+      window.removeEventListener('keydown', handleKeyPress);
       clearTimeout(timeout);
     };
-  }, []);
+  }, [debugMode]);
   
   // Listen for URL changes to update debug mode
   useEffect(() => {
@@ -349,29 +309,29 @@ export default function Home() {
     <>
       <Header />
       <Main ref={mainRef} style={{ position: 'relative' }}>
-        {/* Development links - remove before production */}
-        <DevLinks>
-          <DevLink href="/scroll-test">
-            View Scroll Video Hook Test Page
-          </DevLink>
-          <DevLink href="/video-player-test">
-            View Video Player Test Page
-          </DevLink>
-          <DevLink href="/scroll-video-sections">
-            View Scroll Video Sections Test Page
-          </DevLink>
-          <DevLink href="/snap-scroll-example">
-            View Snap Scroll Example Page
-          </DevLink>
-          <DevLink href={getDebugToggleUrl(debugMode)}>
-            {debugMode ? 'Disable Debug Mode' : 'Enable Debug Mode'}
-          </DevLink>
-          {debugMode && (
+        {/* Development links - only visible in debug mode */}
+        {debugMode && (
+          <DevLinks>
+            <DevLink href="/scroll-test">
+              View Scroll Video Hook Test Page
+            </DevLink>
+            <DevLink href="/video-player-test">
+              View Video Player Test Page
+            </DevLink>
+            <DevLink href="/scroll-video-sections">
+              View Scroll Video Sections Test Page
+            </DevLink>
+            <DevLink href="/snap-scroll-example">
+              View Snap Scroll Example Page
+            </DevLink>
+            <DevLink href={getDebugToggleUrl(debugMode)}>
+              {debugMode ? 'Disable Debug Mode' : 'Enable Debug Mode'}
+            </DevLink>
             <DevLink href={`/?debug=true&debugFeatures=${debugFeatures.INTERSECTION_OBSERVER}`}>
               Enhanced Intersection Debug
             </DevLink>
-          )}
-        </DevLinks>
+          </DevLinks>
+        )}
         
         {/* Snap Scroll Video Sections */}
         <PageContainer>
@@ -402,7 +362,7 @@ export default function Home() {
             onSectionChange={handleSectionChange}
           >
             {videoSections.map((section, index) => (
-              <SnapScrollVideoSection
+              <LazyVideoSection
                 key={section.id}
                 sections={[section]}
                 activeIndex={0}
