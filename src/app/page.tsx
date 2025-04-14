@@ -180,7 +180,6 @@ const ScrollIndicator = styled.div`
 
 export default function Home() {
   const mainRef = useRef<HTMLDivElement>(null);
-  const contentSectionRef = useRef<HTMLElement>(null);
   const [scrollY, setScrollY] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
@@ -288,9 +287,8 @@ export default function Home() {
   
   const handleHeroScroll = () => {
     if (activeIndex === videoSections.length - 1) {
-      if (contentSectionRef.current) {
-        contentSectionRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
+      // Navigate to the our-work page instead of scrolling to a section
+      window.location.href = '/our-work';
     } else {
       // If not on the last section, scroll to the next section
       const nextIndex = activeIndex + 1;
@@ -381,13 +379,7 @@ export default function Home() {
           )}
         </PageContainer>
         
-        {/* Content sections start after the video scroll sections */}
-        <ContentSection ref={contentSectionRef}>
-          <ResponsiveContainer>
-            <SectionTitle>Our Work</SectionTitle>
-            <ServicesSection />
-          </ResponsiveContainer>
-        </ContentSection>
+        {/* Content sections could be added here */}
       </Main>
       <Footer />
     </>
