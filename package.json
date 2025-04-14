@@ -20,30 +20,32 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "boxen": "^7.1.1",
     "chalk": "^5.3.0",
+    "cli-table3": "^0.6.3",
     "commander": "^11.1.0",
     "dotenv": "^16.3.1",
-    "openai": "^4.86.1",
     "figlet": "^1.7.0",
-    "boxen": "^7.1.1",
+    "framer-motion": "^11.0.5",
     "gradient-string": "^2.0.2",
-    "cli-table3": "^0.6.3",
-    "ora": "^7.0.1",
+    "gsap": "^3.12.7",
+    "intersection-observer": "^0.12.2",
+    "lucide-react": "^0.487.0",
     "next": "^14.1.0",
+    "openai": "^4.86.1",
+    "ora": "^7.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "styled-components": "^6.1.8",
-    "framer-motion": "^11.0.5",
-    "intersection-observer": "^0.12.2",
     "video.js": "^8.10.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",
     "@types/react": "^18.2.57",
     "@types/react-dom": "^18.2.19",
-    "typescript": "^5.3.3",
     "eslint": "^8.56.0",
     "eslint-config-next": "^14.1.0",
-    "prettier": "^3.2.5"
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3"
   }
 }

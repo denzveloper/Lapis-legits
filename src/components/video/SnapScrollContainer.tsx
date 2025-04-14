@@ -632,21 +632,23 @@ const SnapScrollContainer: React.FC<SnapScrollContainerProps> = ({
       </NavigationBullets>
       
       {/* Section indicator at bottom */}
-      <SectionIndicator 
-        $active={activeSection} 
-        $total={sections.length}
-        aria-hidden="true"
-      >
-        <ProgressDots>
-          {sections.map((_, index) => (
-            <ProgressDot 
-              key={index} 
-              $isActive={activeSection === index}
-              style={{ transitionDelay: `${Math.abs(activeSection - index) * 50}ms` }}
-            />
-          ))}
-        </ProgressDots>
-      </SectionIndicator>
+      {false && (
+        <SectionIndicator 
+          $active={activeSection} 
+          $total={sections.length}
+          aria-hidden="true"
+        >
+          <ProgressDots>
+            {sections.map((_, index) => (
+              <ProgressDot 
+                key={index} 
+                $isActive={activeSection === index}
+                style={{ transitionDelay: `${Math.abs(activeSection - index) * 50}ms` }}
+              />
+            ))}
+          </ProgressDots>
+        </SectionIndicator>
+      )}
     </>
   );
 };

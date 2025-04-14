@@ -8,9 +8,11 @@ import Footer from '@/components/layout/Footer';
 import ServicesSection from '@/components/services/ServicesSection';
 import Link from 'next/link';
 import SnapScrollContainer from '@/components/video/SnapScrollContainer';
-import SnapScrollVideoSection, { VideoSection } from '@/components/video/SnapScrollVideoSection';
+import LazyVideoSection from '@/components/video/LazyVideoSection';
 import { IntersectionDebugger } from '@/components/debug';
 import { isDebugModeEnabled, getDebugToggleUrl, debugLog, debugFeatures } from '@/utils/debugUtils';
+import { VIDEO_CONSTANTS } from '@/components/video/LazyVideoSection';
+import { videoSections } from '@/config/videoSections';
 
 const Main = styled.main`
   width: 100%;
@@ -176,49 +178,8 @@ const ScrollIndicator = styled.div`
   }
 `;
 
-// Define video sections for the main page
-const videoSections: VideoSection[] = [
-  {
-    id: 'hero-section',
-    title: 'Captivating Visual Stories That Inspire',
-    subtitle: 'LAPIS creates immersive visual experiences that blend artistry with powerful storytelling',
-    videoSrc: { 
-      src: '/videos/lapis_demo.mp4',
-      type: 'video/mp4'
-    },
-    textPosition: 'center',
-    textColor: 'white',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)'
-  },
-  {
-    id: 'commercial-section',
-    title: 'Commercial Productions',
-    subtitle: 'High-impact video content that drives engagement and elevates your brand',
-    videoSrc: { 
-      src: '/videos/lapis_demo.mp4',
-      type: 'video/mp4'
-    },
-    textPosition: 'left',
-    textColor: 'white',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)'
-  },
-  {
-    id: 'documentary-section',
-    title: 'Documentary Storytelling',
-    subtitle: 'Authentic narratives that connect with audiences on a deeper level',
-    videoSrc: { 
-      src: '/videos/lapis_demo.mp4',
-      type: 'video/mp4'
-    },
-    textPosition: 'right',
-    textColor: 'white',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)'
-  }
-];
-
 export default function Home() {
   const mainRef = useRef<HTMLDivElement>(null);
-  const contentSectionRef = useRef<HTMLElement>(null);
   const [scrollY, setScrollY] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
@@ -236,6 +197,19 @@ export default function Home() {
       import('intersection-observer');
     }
     
+    // Add keyboard shortcut handler for debug mode
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'd') {
+        event.preventDefault();
+        setDebugMode(prev => !prev);
+        // Update URL to reflect debug mode change
+        const newUrl = getDebugToggleUrl(!debugMode);
+        window.history.pushState({}, '', newUrl);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    
     // Debounce scroll events for better performance
     let timeout: NodeJS.Timeout;
     
@@ -247,8 +221,8 @@ export default function Home() {
     };
     
     const checkDevice = () => {
-      setIsMobile(window.innerWidth <= 480);
-      setIsTablet(window.innerWidth > 480 && window.innerWidth <= 768);
+      setIsMobile(window.innerWidth <= VIDEO_CONSTANTS.MOBILE_BREAKPOINT);
+      setIsTablet(window.innerWidth > VIDEO_CONSTANTS.MOBILE_BREAKPOINT && window.innerWidth <= VIDEO_CONSTANTS.TABLET_BREAKPOINT);
     };
     
     // Check for debug mode
@@ -265,9 +239,10 @@ export default function Home() {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', checkDevice);
       window.removeEventListener('orientationchange', checkDevice);
+      window.removeEventListener('keydown', handleKeyPress);
       clearTimeout(timeout);
     };
-  }, []);
+  }, [debugMode]);
   
   // Listen for URL changes to update debug mode
   useEffect(() => {
@@ -312,9 +287,8 @@ export default function Home() {
   
   const handleHeroScroll = () => {
     if (activeIndex === videoSections.length - 1) {
-      if (contentSectionRef.current) {
-        contentSectionRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
+      // Navigate to the our-work page instead of scrolling to a section
+      window.location.href = '/our-work';
     } else {
       // If not on the last section, scroll to the next section
       const nextIndex = activeIndex + 1;
@@ -333,29 +307,29 @@ export default function Home() {
     <>
       <Header />
       <Main ref={mainRef} style={{ position: 'relative' }}>
-        {/* Development links - remove before production */}
-        <DevLinks>
-          <DevLink href="/scroll-test">
-            View Scroll Video Hook Test Page
-          </DevLink>
-          <DevLink href="/video-player-test">
-            View Video Player Test Page
-          </DevLink>
-          <DevLink href="/scroll-video-sections">
-            View Scroll Video Sections Test Page
-          </DevLink>
-          <DevLink href="/snap-scroll-example">
-            View Snap Scroll Example Page
-          </DevLink>
-          <DevLink href={getDebugToggleUrl(debugMode)}>
-            {debugMode ? 'Disable Debug Mode' : 'Enable Debug Mode'}
-          </DevLink>
-          {debugMode && (
+        {/* Development links - only visible in debug mode */}
+        {debugMode && (
+          <DevLinks>
+            <DevLink href="/scroll-test">
+              View Scroll Video Hook Test Page
+            </DevLink>
+            <DevLink href="/video-player-test">
+              View Video Player Test Page
+            </DevLink>
+            <DevLink href="/scroll-video-sections">
+              View Scroll Video Sections Test Page
+            </DevLink>
+            <DevLink href="/snap-scroll-example">
+              View Snap Scroll Example Page
+            </DevLink>
+            <DevLink href={getDebugToggleUrl(debugMode)}>
+              {debugMode ? 'Disable Debug Mode' : 'Enable Debug Mode'}
+            </DevLink>
             <DevLink href={`/?debug=true&debugFeatures=${debugFeatures.INTERSECTION_OBSERVER}`}>
               Enhanced Intersection Debug
             </DevLink>
-          )}
-        </DevLinks>
+          </DevLinks>
+        )}
         
         {/* Snap Scroll Video Sections */}
         <PageContainer>
@@ -386,7 +360,7 @@ export default function Home() {
             onSectionChange={handleSectionChange}
           >
             {videoSections.map((section, index) => (
-              <SnapScrollVideoSection
+              <LazyVideoSection
                 key={section.id}
                 sections={[section]}
                 activeIndex={0}
@@ -405,13 +379,7 @@ export default function Home() {
           )}
         </PageContainer>
         
-        {/* Content sections start after the video scroll sections */}
-        <ContentSection ref={contentSectionRef}>
-          <ResponsiveContainer>
-            <SectionTitle>Our Work</SectionTitle>
-            <ServicesSection />
-          </ResponsiveContainer>
-        </ContentSection>
+        {/* Content sections could be added here */}
       </Main>
       <Footer />
     </>

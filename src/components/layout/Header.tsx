@@ -229,7 +229,7 @@ export default function Header() {
         <Nav>
           <NavList>
             <NavItem>
-              <Link href="/#work">Our Work</Link>
+              <Link href="/our-work">Our Work</Link>
             </NavItem>
             <NavItem>
               <Link href="/#services">Services</Link>
@@ -262,7 +262,7 @@ export default function Header() {
           >
             <MobileNavList>
               <MobileNavItem variants={itemVariants}>
-                <Link href="/#work" onClick={closeMenu}>
+                <Link href="/our-work" onClick={closeMenu}>
                   Our Work
                 </Link>
               </MobileNavItem>
